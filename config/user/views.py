@@ -54,4 +54,3 @@ class LoginView(generics.CreateAPIView):
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
             
         
-    
