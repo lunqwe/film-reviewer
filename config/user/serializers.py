@@ -29,14 +29,26 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password2')
         print(validated_data)
         
-        # Создаем пользователя
-        user = User.objects.create(**validated_data)
+        username_exists = CustomUser.objects.filter(username=validated_data['username']).exists()
+        email_exists = CustomUser.objects.filter(email=validated_data['email']).exists()
+        error_check = False
+        
+        if username_exists:
+            raise serializers.ValidationError('Username is already taken.')
+            error_check = True
+        
+        if email_exists:
+            raise serializers.ValidationError('Email is already registered.')
+            error_check
+        
+        if not error_check:
+            user = User.objects.create(**validated_data)
 
-        # Устанавливаем пароль
-        user.set_password(password)
-        user.save()
+            # Устанавливаем пароль
+            user.set_password(password)
+            user.save()
 
-        return user
+            return user
         
 
 class LoginSerializer(serializers.Serializer):

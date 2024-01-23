@@ -19,24 +19,10 @@ class CreateUserView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Перевірка наявності користувача за ім'ям або поштою
-        username_exists = CustomUser.objects.filter(username=serializer.validated_data['username']).exists()
-        email_exists = CustomUser.objects.filter(email=serializer.validated_data['email']).exists()
-
-        if username_exists:
-            # Користувач з таким ім'ям або поштою вже існує, повертаємо відповідь про конфлікт
-            return Response({'error': 'User with this username already exists.'}, status=status.HTTP_409_CONFLICT)
-        
-        if email_exists:
-            return Response({'error': 'Email is already in use.'}, status=status.HTTP_409_CONFLICT)
-
-        # Ізвлекаємо пароль з серіалізатора
         password = serializer.validated_data.pop('password')
 
-        # Створюємо користувача без password1 та password2
         user = CustomUser.objects.create(**serializer.validated_data)
-
-        # Встановлюємо пароль користувача
+        
         user.set_password(password)
         user.save()
 
