@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from .models import CustomUser
+from rest_framework import serializers
 # Create your views here.
 
 User = get_user_model()
@@ -17,16 +18,38 @@ class CreateUserView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            password = serializer.validated_data.pop('password')
 
-        password = serializer.validated_data.pop('password')
+            user = CustomUser.objects.create(**serializer.validated_data)
+            print(user)
+            
+            user.set_password(password)
+            user.save()
 
-        user = CustomUser.objects.create(**serializer.validated_data)
+            return Response({'status': "success",  'detail': 'User created successfully!'}, status=status.HTTP_201_CREATED)
         
-        user.set_password(password)
-        user.save()
-
-        return Response({'detail': 'User created successfully'}, status=status.HTTP_201_CREATED)
+        except serializers.ValidationError as e:
+            errors = e.detail
+            
+            email_error = errors.get('email', [])[0] if errors.get('email') else None
+            username_error = errors.get('username', [])[0] if errors.get('username') else None
+            password_error = errors.get('non_field_errors', [])[0] if errors.get('non_field_errors') else None
+            
+            response_data = {'status': 'error'}
+            
+            if email_error:
+                response_data['email'] = email_error
+            
+            if username_error:
+                response_data['username'] = username_error
+                
+            if password_error:
+                response_data['password'] = password_error
+            
+            
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
     
 
 class LoginView(generics.CreateAPIView):
@@ -34,20 +57,15 @@ class LoginView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            # Если валидация успешна, вернуть успешный ответ
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
-
-        user = authenticate(request, email=email, password=password)
-        print(user)
-
-        if user:
-            # Если пользователь аутентифицирован успешно, создаем или получаем токен
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
-        else:
-            # Если аутентификация не удалась, возвращаем ошибку
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        except serializers.ValidationError as e:
+            # Обработка ошибок валидации
+            errors = e.detail
+            error_detail = errors.get('non_field_errors', [])[0] if errors.get('non_field_errors') else None
+            print(error_detail)
+            return Response({'status': 'error', 'detail': error_detail}, status=status.HTTP_400_BAD_REQUEST)
             
-        
