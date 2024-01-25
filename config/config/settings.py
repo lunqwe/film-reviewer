@@ -152,6 +152,20 @@ USE_I18N = True
 
 USE_TZ = True
 
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.ukr.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'jobpilot@ukr.net'  # Замените на свой Gmail-адрес
+# EMAIL_HOST_PASSWORD = 'A3wMBn5m6sYghCr9' 
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.sendgrid.net"  # Адрес вашего локального SMTP-сервера
+EMAIL_HOST_USER = "apikey"
+EMAIL_HOST_PASSWORD = "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"
+EMAIL_PORT = 587  # Порт вашего локального SMTP-сервера
+EMAIL_USE_TLS = False 
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

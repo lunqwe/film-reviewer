@@ -7,11 +7,13 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from .models import CustomUser
 from rest_framework import serializers
+from django.core.mail import EmailMessage
+import random
 # Create your views here.
 
 User = get_user_model()
 
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
@@ -69,3 +71,40 @@ class LoginView(generics.CreateAPIView):
             print(error_detail)
             return Response({'status': 'error', 'detail': error_detail}, status=status.HTTP_400_BAD_REQUEST)
             
+class VerifyEmailView(generics.CreateAPIView):
+    serializer_class = SendVerificationSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        user = serializer.create(request.data)
+        check_verified = user.verified_email
+        
+        if user:
+            if not check_verified:
+                generated_code = random.randint(100000,1000000)
+                user.verification_code = str(generated_code)
+                user.save()
+                email = EmailMessage('Jobpilot email verification', str(generated_code), from_email='jobpilot@ukr.net', to=[user.email])
+                email.send()
+            
+                return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status': 'error', 'detail': 'User is already verified or server stopped connection to smtp server.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status': 'error', 'detail': 'Failed to get user email.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CheckVerificationView(generics.CreateAPIView):
+    serializer_class = CheckVerificationSerializer
+    
+    def create(self,request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        check_verification = serializer.validate(request.data)
+        user = CustomUser.objects.filter(id=request.data['user_id'])[0]
+        if user.verified_email:
+            return Response({'status': 'error', 'detail': 'User email is already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if check_verification:
+            return Response({'status': 'success', 'detail': 'Verificated successfully!'}, status=status.HTTP_201_CREATED)
+        
+        else:
+            return Response({'status': 'error', 'detail': 'Wrong code.'}, status=status.HTTP_400_BAD_REQUEST)

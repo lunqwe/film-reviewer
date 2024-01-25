@@ -67,5 +67,25 @@ class LoginSerializer(serializers.Serializer):
             # Если пользователя с таким email не существует
             raise serializers.ValidationError('Email not registered')
     
-
+class SendVerificationSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
     
+    def create(self, data):
+        user = CustomUser.objects.filter(id=data['user_id'])[0]
+        return user
+    
+class CheckVerificationSerializer(serializers.Serializer):
+    code = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    
+    def validate(self, data):
+        self.user_id = data['user_id']
+        self.code = data['code']
+        user = CustomUser.objects.filter(id=self.user_id)[0]
+        if self.code and len(str(self.code)) == 6 and not user.verified_email:
+            user_saved_code = user.verification_code
+            if user_saved_code == self.code:
+                user.verified_email = True
+                user.save()
+                return True
+            

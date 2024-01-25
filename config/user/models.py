@@ -23,6 +23,8 @@ class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=255, default='', blank=True, null=True)
     email = models.EmailField(unique=True)
     status = models.CharField(max_length=255, default='', blank=True, null=True)
+    verified_email = models.BooleanField(default=False)
+    verification_code = models.CharField(default=0)
     
     objects = CustomUserManager()
     
