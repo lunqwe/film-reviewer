@@ -162,7 +162,7 @@ USE_TZ = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.sendgrid.net"  # Адрес вашего локального SMTP-сервера
 EMAIL_HOST_USER = "apikey"
-EMAIL_HOST_PASSWORD = "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"
+EMAIL_HOST_PASSWORD = "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"
 EMAIL_PORT = 587  # Порт вашего локального SMTP-сервера
 EMAIL_USE_TLS = False 
 
