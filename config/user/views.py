@@ -8,10 +8,14 @@ from rest_framework.authtoken.models import Token
 from .models import CustomUser
 from rest_framework import serializers
 from django.core.mail import EmailMessage
+import os
+import sendgrid
+from sendgrid.helpers.mail import Mail, From, To
 import random
-# Create your views here.
+from decouple import AutoConfig
 
 User = get_user_model()
+config = AutoConfig()
 
 from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer
 
@@ -84,9 +88,17 @@ class VerifyEmailView(generics.CreateAPIView):
                 generated_code = random.randint(100000,1000000)
                 user.verification_code = str(generated_code)
                 user.save()
-                email = EmailMessage('Jobpilot email verification', str(generated_code), from_email='jobpilot@ukr.net', to=[user.email])
-                email.send()
-            
+                sg = sendgrid.SendGridAPIClient(api_key=config('SENDGRID_API_KEY'))
+                message = Mail(
+                    from_email=From('jobpilot@ukr.net', 'Jobpilot'),
+                    to_emails=To(user.email),
+                    subject='Jobpilot email verification',
+                    plain_text_content=str(generated_code)
+                )
+
+                response = sg.send(message)
+                
+             
                 return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'status': 'error', 'detail': 'User is already verified or server stopped connection to smtp server.'}, status=status.HTTP_400_BAD_REQUEST)
