@@ -88,7 +88,7 @@ class VerifyEmailView(generics.CreateAPIView):
                 generated_code = random.randint(100000,1000000)
                 user.verification_code = str(generated_code)
                 user.save()
-                sg = sendgrid.SendGridAPIClient(api_key=config('SENDGRID_API_KEY'))
+                sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
                 message = Mail(
                     from_email=From('jobpilot@ukr.net', 'Jobpilot'),
                     to_emails=To(user.email),
