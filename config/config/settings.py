@@ -11,16 +11,17 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import AutoConfig
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+config = AutoConfig()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--*zt#nu$sc@zm+x1jo3ezk*tf3iwt0*uv)ti%=p1020-f7x!j7'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -119,7 +120,7 @@ import os
 import dj_database_url
 
 DATABASES = {
-    'default': dj_database_url.parse('postgres://jobpilot_db_user:7mUSIHqwOwZXHx04phULSr4gzvTIp9XB@dpg-cmm532ol5elc73c9tjb0-a.oregon-postgres.render.com/jobpilot_db')
+    'default': dj_database_url.parse(config('DATABASE_URL'))
 }
 
 # Password validation
@@ -161,8 +162,8 @@ USE_TZ = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.sendgrid.net"  # Адрес вашего локального SMTP-сервера
-EMAIL_HOST_USER = "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"
-EMAIL_HOST_PASSWORD = "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"
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 465  # Порт вашего локального SMTP-сервера
 
 
