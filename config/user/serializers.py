@@ -119,7 +119,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     password1 = serializers.CharField(max_length=255)
     password2 = serializers.CharField(max_length=255)
     
-    def validate(self, data):
+    def create(self, data):
         self.password1 = data['password1']
         self.password2 = data['password2']
         
