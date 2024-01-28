@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils import timezone
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, full_name, username=None, status=None, password=None, **extra_fields):
@@ -24,7 +26,17 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     status = models.CharField(max_length=255, default='', blank=True, null=True)
     verified_email = models.BooleanField(default=False)
-    verification_code = models.CharField(default=0)
     
     objects = CustomUserManager()
+    
+class Verificator(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6, default='0')
+    time_created = models.DateTimeField(auto_now_add=True)
+    
+    def is_expired(self):
+        return timezone.now() >= self.time_created + timezone.timedelta(hours=3)
+    
+    def __str__(self):
+        return self.user.username
     

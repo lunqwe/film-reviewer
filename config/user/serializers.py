@@ -2,9 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
-from .models import CustomUser
+from .models import CustomUser, Verificator
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -83,9 +84,17 @@ class CheckVerificationSerializer(serializers.Serializer):
         self.code = data['code']
         user = CustomUser.objects.filter(id=self.user_id)[0]
         if self.code and len(str(self.code)) == 6 and not user.verified_email:
-            user_saved_code = user.verification_code
-            if user_saved_code == self.code:
+            verificator = Verificator.objects.filter(user=user, code=self.code)[0]
+            expired = verificator.is_expired()
+            if expired:
+                verificator.delete()
+                return 'expired'
+            
+            if verificator and not expired:
+                verificator.delete()
                 user.verified_email = True
-                user.save()
                 return True
+        else:
+            return 'wrong_code'
+            
             

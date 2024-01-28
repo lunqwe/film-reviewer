@@ -5,7 +5,7 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from .models import CustomUser
+from .models import CustomUser, Verificator
 from rest_framework import serializers
 from django.core.mail import EmailMessage
 import os
@@ -86,9 +86,10 @@ class VerifyEmailView(generics.CreateAPIView):
         if user:
             if not check_verified:
                 generated_code = random.randint(100000,1000000)
-                user.verification_code = str(generated_code)
-                user.save()
-                sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
+                verificator = Verificator.objects.get_or_create(user=user)
+                verificator.code = str(generated_code)
+                verificator.save()
+                sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
                 message = Mail(
                     from_email=From('jobpilot@ukr.net', 'Jobpilot'),
                     to_emails=To(user.email),
@@ -97,6 +98,7 @@ class VerifyEmailView(generics.CreateAPIView):
                 )
 
                 response = sg.send(message)
+                print(response)
                 
              
                 return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
@@ -112,11 +114,18 @@ class CheckVerificationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         check_verification = serializer.validate(request.data)
         user = CustomUser.objects.filter(id=request.data['user_id'])[0]
+        
         if user.verified_email:
             return Response({'status': 'error', 'detail': 'User email is already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if check_verification == 'expired':
+            return Response({'status':'error', 'detail': 'Verification code expired.'}, status=status.HTTP_408_REQUEST_TIMEOUT)
         
-        if check_verification:
+        elif check_verification == 'wrong_code':
+            return Response({'status': 'error', 'detail': "Verificator never existed."}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        elif check_verification:
             return Response({'status': 'success', 'detail': 'Verificated successfully!'}, status=status.HTTP_201_CREATED)
         
         else:
-            return Response({'status': 'error', 'detail': 'Wrong code.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'error', 'detail': 'Verificator never existed.'}, status=status.HTTP_400_BAD_REQUEST)
