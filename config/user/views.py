@@ -169,7 +169,7 @@ class ResetPasswordView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)  # Проверяем валидность данных
 
         # Получаем данные из запроса
-        password = serializer.validated_data
+        password = serializer.create(request.data)
         user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
         user = CustomUser.objects.get(id=user_id)
         token = Token.objects.get(user=user)
@@ -184,12 +184,17 @@ class ResetPasswordView(generics.CreateAPIView):
             token_obj = Token.objects.get(user=user)
         except Token.DoesNotExist:
             return Response({'status': 'error', 'detail': 'Token not found.'}, status=400)
+        
+        if password:
             
-        user.set_password(password)
-        user.save()
-
-            # Удаляем токен пользователя
-        token_obj.delete()
+            print(password)
+            user.set_password(password)
+            user.save()
+            
+                # Удаляем токен пользователя
+            token_obj.delete()
+        else:
+            return Response({'status': 'error', 'detail': "Passwords do not match."})
             
         return Response({'status': 'success', 'detail': 'Password changed successfully!', 'note': 'You must relogin'})
         

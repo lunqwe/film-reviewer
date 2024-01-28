@@ -125,4 +125,3 @@ class ResetPasswordSerializer(serializers.Serializer):
         
         if self.password1 == self.password2:
             return self.password1
-    
