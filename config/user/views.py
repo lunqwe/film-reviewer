@@ -5,6 +5,7 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
+from django.utils.http import urlsafe_base64_decode
 from rest_framework.authtoken.models import Token
 from rest_framework import serializers
 from decouple import AutoConfig
@@ -163,10 +164,33 @@ class SendResetPassView(generics.CreateAPIView):
 class ResetPasswordView(generics.CreateAPIView):
     serializer_class = ResetPasswordSerializer
     
-    def get(self, request, uidb64, token, *args, **kwargs):
+    def post(self, request, uidb64, token, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        user = serializer.validate(self, uidb64, request.data)
-        if user:
-            return Response({'status': 'success', 'detail': 'Password changed successfully!'})
+        serializer.is_valid(raise_exception=True)  # Проверяем валидность данных
+
+        # Получаем данные из запроса
+        password = serializer.validated_data
+        user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
+        user = CustomUser.objects.get(id=user_id)
+        token = Token.objects.get(user=user)
+        try:
+            # Получаем пользователя по идентификатору
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'status': 'error', 'detail': 'User not found.'}, status=400)
+
+        try:
+                # Получаем токен пользователя
+            token_obj = Token.objects.get(user=user)
+        except Token.DoesNotExist:
+            return Response({'status': 'error', 'detail': 'Token not found.'}, status=400)
+            
+        user.set_password(password)
+        user.save()
+
+            # Удаляем токен пользователя
+        token_obj.delete()
+            
+        return Response({'status': 'success', 'detail': 'Password changed successfully!', 'note': 'You must relogin'})
         
     
