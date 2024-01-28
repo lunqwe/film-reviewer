@@ -176,13 +176,13 @@ class ResetPasswordView(generics.CreateAPIView):
         try:
             # Получаем пользователя по идентификатору
             user = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
+        except:
             return Response({'status': 'error', 'detail': 'User not found.'}, status=400)
 
         try:
                 # Получаем токен пользователя
             token_obj = Token.objects.get(user=user)
-        except Token.DoesNotExist:
+        except:
             return Response({'status': 'error', 'detail': 'Token not found.'}, status=400)
         
         if password:
@@ -190,7 +190,7 @@ class ResetPasswordView(generics.CreateAPIView):
             print(password)
             user.set_password(password)
             user.save()
-            
+
                 # Удаляем токен пользователя
             token_obj.delete()
         else:
