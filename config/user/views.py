@@ -4,20 +4,22 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
-from .models import CustomUser, Verificator
-from rest_framework import serializers
 from django.core.mail import EmailMessage
+from rest_framework.authtoken.models import Token
+from rest_framework import serializers
+from decouple import AutoConfig
 import os
+import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-import random
-from decouple import AutoConfig
+from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer
+from .models import CustomUser, Verificator
+
+
 
 User = get_user_model()
 config = AutoConfig()
 
-from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
@@ -130,3 +132,34 @@ class CheckVerificationView(generics.CreateAPIView):
         
         else:
             return Response({'status': 'error', 'detail': 'Verificator never existed.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class SendResetPassView(generics.CreateAPIView):
+    serializer_class = ResetPasswordRequestSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        reset_link = serializer.validate(request.data)
+        if user:
+            if reset_link:
+                sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
+                message = Mail(
+                        from_email=From('jobpilot@ukr.net', 'Jobpilot'),
+                        to_emails=To(user.email),
+                        subject='Jobpilot reset password request',
+                        plain_text_content=reset_link
+                    )
+
+                response = sg.send(message)
+                print(response)
+                
+                return Response({'status':'success', 'detail': 'Password reset link sent.'})
+            else:
+                return Response({'status': 'error', 'detail': 'Error creating password reset link: user not found.'})
+        else:
+            return Response({'status': 'error', 'detail': "User not found."})
+        
+        
+class ResetPasswordView(generics.CreateAPIView):
+    serializer_class = ResetPasswordSerializer
+    

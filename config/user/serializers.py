@@ -2,10 +2,13 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
-from .models import CustomUser, Verificator
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from .models import CustomUser, Verificator
 
 User = get_user_model()
 
@@ -86,7 +89,7 @@ class CheckVerificationSerializer(serializers.Serializer):
         if self.code and len(self.code) == 6 and not user.verified_email:
             verificator = Verificator.objects.get(user=user)
             expired = verificator.is_expired()
-            # True esli expired False esli net
+            # True if expired, else False
             if not expired:
                 if self.code == verificator.code:
                     user.verified_email = True
@@ -98,4 +101,37 @@ class CheckVerificationSerializer(serializers.Serializer):
                 verificator.delete()
                 return 'expired'
             
+class ResetPasswordRequestSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    
+    def validate(self, data):
+        self.user_id = data['user_id']
+        user = CustomUser.objects.get(id=self.user_id)
+        if user:
+            user_uidb64 = urlsafe_base64_encode(str(user.pk).encode('utf-8')) # encode 
+            user_token = Token.objects.get(user=user)
+            print(user_token)
+            link = f'https://jobpilot-server.onrender.com/api/user/password-reset-request/{user_uidb64}/{user_token}'
+            return link
             
+            
+class ResetPasswordSerializer(serializers.Serializer):
+    new_password1 = serializers.CharField(max_length=255)
+    new_password2 = serializers.CharField(max_length=255)
+    user_encoded_id = serializers.CharField(max_length=255)
+    
+    def validate(self, data):
+        self.new_password1 = data['new_password1']
+        self.new_password2 = data['new_password2']
+        self.user_encoded_id = data['user_encoded_id']
+        
+        if self.new_password1 == self.password2:
+            user_id = urlsafe_base64_decode(self.user_encoded_id).decode('utf-8') # decode
+            print(user_id)
+            user = CustomUser.objects.get(id=user_id)
+            if user:
+                user.set_password(self.new_password1)
+                token = Token.objects.get(user=user)
+                if token: 
+                    token.detele()
+                return user
