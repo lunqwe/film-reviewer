@@ -86,15 +86,16 @@ class CheckVerificationSerializer(serializers.Serializer):
         if self.code and len(str(self.code)) == 6 and not user.verified_email:
             verificator = Verificator.objects.filter(user=user, code=self.code)[0]
             expired = verificator.is_expired()
-            if expired:
-                verificator.delete()
-                return 'expired'
-            
-            if verificator and not expired:
-                verificator.delete()
-                user.verified_email = True
-                return True
-        else:
-            return 'wrong_code'
+            if verificator:
+                if expired:
+                    verificator.delete()
+                    return 'expired'
+                
+                if verificator and not expired:
+                    verificator.delete()
+                    user.verified_email = True
+                    return True
+            else:
+                return 'Something wrong'
             
             
