@@ -120,10 +120,10 @@ class ResetPasswordSerializer(serializers.Serializer):
     new_password2 = serializers.CharField(max_length=255)
     user_encoded_id = serializers.CharField(max_length=255)
     
-    def validate(self, data):
-        self.new_password1 = data['new_password1']
-        self.new_password2 = data['new_password2']
-        self.user_encoded_id = data['user_encoded_id']
+    def validate(self, uid, data):
+        self.new_password1 = data['password1']
+        self.new_password2 = data['password2']
+        self.user_encoded_id = uid
         
         if self.new_password1 == self.password2:
             user_id = urlsafe_base64_decode(self.user_encoded_id).decode('utf-8') # decode

@@ -163,3 +163,10 @@ class SendResetPassView(generics.CreateAPIView):
 class ResetPasswordView(generics.CreateAPIView):
     serializer_class = ResetPasswordSerializer
     
+    def get(self, request, uidb64, token, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        user = serializer.validate(self, uidb64, request.data)
+        if user:
+            return Response({'status': 'success', 'detail': 'Password changed successfully!'})
+        
+    
