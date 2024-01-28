@@ -76,7 +76,7 @@ class SendVerificationSerializer(serializers.Serializer):
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
-    code = serializers.IntegerField()
+    code = serializers.CharField(max_length=6)
     user_id = serializers.IntegerField()
     
     def validate(self, data):
