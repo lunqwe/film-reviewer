@@ -83,19 +83,19 @@ class CheckVerificationSerializer(serializers.Serializer):
         self.user_id = data['user_id']
         self.code = data['code']
         user = CustomUser.objects.filter(id=self.user_id)[0]
-        if self.code and len(str(self.code)) == 6 and not user.verified_email:
-            verificator = Verificator.objects.filter(user=user, code=self.code)[0]
+        if self.code and len(self.code) == 6 and not user.verified_email:
+            verificator = Verificator.objects.get(user=user)
             expired = verificator.is_expired()
-            if verificator:
-                if expired:
-                    verificator.delete()
-                    return 'expired'
-                
-                if verificator and not expired:
-                    verificator.delete()
+            # True esli expired False esli net
+            if not expired:
+                if self.code == verificator.code:
                     user.verified_email = True
-                    return True
+                    verificator.delete()
+                    return 'success'
+                else:
+                    return 'wrong_code'
             else:
-                return 'Something wrong'
+                verificator.delete()
+                return 'expired'
             
             

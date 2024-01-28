@@ -125,7 +125,7 @@ class CheckVerificationView(generics.CreateAPIView):
         elif check_verification == 'wrong_code':
             return Response({'status': 'error', 'detail': "Verificator never existed."}, status=status.HTTP_401_UNAUTHORIZED)
         
-        elif check_verification:
+        elif check_verification == 'success':
             return Response({'status': 'success', 'detail': 'Verificated successfully!'}, status=status.HTTP_201_CREATED)
         
         else:
