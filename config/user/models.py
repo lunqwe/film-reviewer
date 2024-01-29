@@ -40,3 +40,57 @@ class Verificator(models.Model):
     def __str__(self):
         return self.user.username
     
+class Employer(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    logo = models.ImageField(blank=True, null=True)
+    banner = models.ImageField(blank=True, null=True)
+    company_name = models.CharField(max_length=255, default="0")
+    about = models.TextField(blank=True, null=True)
+    
+    organization_type = models.CharField(max_length=255, default='0')
+    industry = models.CharField(max_length=255, default='0')
+    team_size = models.CharField(max_length=255, default='0')
+    website = models.URLField(null=True, blank=True)
+    year_of_establishment = models.DateField(blank=True, null=True)
+    company_vision = models.TextField(blank=True, null=True)
+    
+    map_location = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=30)
+
+class EmployerSocialLink(models.Model):
+    employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
+    social_network = models.CharField(max_length=255)
+    link = models.URLField()
+    
+    
+
+class Candidate(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(blank=True, null=True)
+    headlinee = models.CharField(max_length=255, default='0')
+    experiences = models.CharField(max_length=999, default='0')
+    educations = models.CharField(max_length=999, default='0')
+    website = models.CharField(max_length=999, default='0')
+    
+    nationality = models.CharField(max_length=255, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=255, blank=True, null=True)
+    marital_status = models.CharField(max_length=255, blank=True, null=True)
+    biography = models.TextField(blank=True, null=True)
+    
+    map_location = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=30, blank=True, null=True)
+    
+
+    
+class ResumeFile(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    file = models.FileField(blank=True, null=True)
+    
+class CandidateSocialLink(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    social_network = models.CharField(max_length=255)
+    link = models.URLField(blank=True, null=True)
+    
+    

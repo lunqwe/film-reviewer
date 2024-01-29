@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['email', 'username', 'full_name', 'password', 'password2', 'status']
 
     def validate(self, data):
@@ -56,7 +56,7 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         # Проверяем существование пользователя с данным email
-        user = User.objects.filter(email=email).first()
+        user = CustomUser.objects.filter(email=email).first()
 
         if user:
             # Проверяем валидность пароля

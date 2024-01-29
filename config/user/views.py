@@ -14,7 +14,7 @@ import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer
-from .models import CustomUser, Verificator
+from .models import CustomUser, Verificator, Candidate, Employer
 
 
 
@@ -30,14 +30,27 @@ class CreateUserView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             password = serializer.validated_data.pop('password')
+            user_type = request.data['status']
 
             user = CustomUser.objects.create(**serializer.validated_data)
             print(user)
-            
             user.set_password(password)
             user.save()
+            
+            if user_type:
+                if user_type == 'candidate':
+                    candidate = Candidate.objects.create(user=user)
+                
+                elif user_type == 'employer':
+                    employer = Employer.objects.create(user=user)
+                    
+                else:
+                    return Response({'status': 'error', 'detail': 'Wrong user status.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+            else:
+                return Response({'status': 'error', 'detail': 'User status specification required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({'status': "success",  'detail': 'User created successfully!'}, status=status.HTTP_201_CREATED)
+            return Response({'status': "success",  'detail': 'User created successfully!', 'id': user.id}, status=status.HTTP_201_CREATED)
         
         except serializers.ValidationError as e:
             errors = e.detail
@@ -171,8 +184,6 @@ class ResetPasswordView(generics.CreateAPIView):
         # Получаем данные из запроса
         password = serializer.create(request.data)
         user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
-        user = CustomUser.objects.get(id=user_id)
-        token = Token.objects.get(user=user)
         try:
             # Получаем пользователя по идентификатору
             user = CustomUser.objects.get(id=user_id)
