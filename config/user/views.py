@@ -102,7 +102,7 @@ class VerifyEmailView(generics.CreateAPIView):
         if user:
             if not check_verified:
                 generated_code = random.randint(100000,1000000)
-                verificator = Verificator.objects.get(user=user)
+                verificator = Verificator.objects.create(user=user)
                 print(generated_code)
                 verificator.code = str(generated_code)
                 verificator.save()
