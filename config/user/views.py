@@ -13,7 +13,7 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-from .serializers import UserSerializer, LoginSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer
+from .serializers import DeleteDaynSerializer, UserSerializer, LoginSerializer, SaveEmployerSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer
 from .models import CustomUser, Verificator, Candidate, Employer
 
 
@@ -69,6 +69,7 @@ class CreateUserView(generics.CreateAPIView):
                 
             if password_error:
                 response_data['password'] = password_error
+            
             
             
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
@@ -213,4 +214,29 @@ class ResetPasswordView(generics.CreateAPIView):
             
         return Response({'status': 'success', 'detail': 'Password changed successfully!', 'note': 'You must relogin'})
         
+
+class SaveEmployerView(generics.CreateAPIView):
+    serializer_class = SaveEmployerSerializer
     
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        employer_created = serializer.create(request.data)
+        
+        if not employer_created:
+            return Response({"status": 'error', 'detail': "Error creating employer."})
+        
+        return Response({'status': "success", "detail": "Employer created successfully."})
+    
+class DeleteDaynView(generics.CreateAPIView):
+    serializer_class = DeleteDaynSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        user = serializer.create(request.data)
+        
+        if user:
+            user.delete()
+            
+            return Response({'status': "udalil nahui"})

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from .models import CustomUser, Verificator
+from .models import CustomUser, Verificator, Employer
 
 User = get_user_model()
 
@@ -124,3 +124,63 @@ class ResetPasswordSerializer(serializers.Serializer):
         
         if self.password1 == self.password2:
             return self.password1
+        
+        
+class SaveEmployerSerializer(serializers.Serializer):
+    user_id = serializers.CharField(max_length=255)
+    # logo = serializers.ImageField(blank=True, null=True)
+    # banner = models.ImageField(blank=True, null=True)
+    company_name = serializers.CharField(max_length=255)
+    about = serializers.TextField(blank=True, null=True)
+    
+    organization_type = serializers.CharField(max_length=255, default='0')
+    industry_types = serializers.CharField(max_length=255, default='0')
+    team_size = serializers.CharField(max_length=255, default='0')
+    year_of_establishment = serializers.DateField(blank=True, null=True)
+    website = serializers.CharField(max_length=255)
+    company_vision = serializers.TextField(blank=True, null=True)
+    
+    map_location = serializers.CharField(max_length=255, blank=True, null=True)
+    phone_number = serializers.CharField(max_length=30)
+    email = serializers.EmailField()
+    
+    def create(self, data):
+        self.user_id = data.get('user_id')
+        self.company_name = data.get('company_name')
+        self.about = data.get('about')
+        self.organization_type = data.get('organization_type')
+        self.industry_types = data.get('industry_types')
+        self.team_size = data.get('team_size')
+        self.year_of_establishment = data.get('year_of_establishment')
+        self.website = data.get('website')
+        self.company_vision = data.get('company_vision')
+        self.map_location = data.get('map_location')
+        self.phone_number = data.get('phone_number')
+        self.email = data.get('email')
+        
+        user = CustomUser.objects.get(id=self.user_id)
+        
+        employer = Employer.objects.create(user=user,
+                                           company_name=self.company_name,
+                                           about=self.about,
+                                           organization_type=self.organization_type,
+                                           industry = self.industry_types,
+                                           team_size = self.team_size,
+                                           website = self.website,
+                                           year_of_establishment = self.year_of_establishment,
+                                           company_vision= self.company_vision,
+                                           map_location = self.map_location,
+                                           phone_number = self.phone_number,
+                                           email = self.email)
+        
+        return employer
+
+class DeleteDaynSerializer(serializers.Serializer):
+    dayn = serializers.CharField()
+    
+    def create(self, data):
+        user = CustomUser.objects.get(username=data['username'])
+        
+        if user:
+            return user
+    

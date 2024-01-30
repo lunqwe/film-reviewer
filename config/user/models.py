@@ -45,17 +45,18 @@ class Employer(models.Model):
     logo = models.ImageField(blank=True, null=True)
     banner = models.ImageField(blank=True, null=True)
     company_name = models.CharField(max_length=255, default="0")
-    about = models.TextField(blank=True, null=True)
+    about = models.TextField(blank=True, null=True, default='0')
     
     organization_type = models.CharField(max_length=255, default='0')
-    industry = models.CharField(max_length=255, default='0')
+    industry_types = models.CharField(max_length=255, default='0')
     team_size = models.CharField(max_length=255, default='0')
-    website = models.URLField(null=True, blank=True)
+    website = models.CharField(null=True, blank=True, default='0')
     year_of_establishment = models.DateField(blank=True, null=True)
-    company_vision = models.TextField(blank=True, null=True)
+    company_vision = models.TextField(blank=True, null=True, default='0')
     
-    map_location = models.CharField(max_length=255, blank=True, null=True)
-    phone_number = models.CharField(max_length=30)
+    map_location = models.CharField(max_length=255, blank=True, null=True, default='0')
+    phone_number = models.CharField(max_length=30, default='0')
+    email = models.EmailField()
 
 class EmployerSocialLink(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
