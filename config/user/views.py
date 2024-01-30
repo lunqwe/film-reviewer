@@ -181,7 +181,7 @@ class ResetPasswordView(generics.CreateAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)  # Проверяем валидность данных
-        uidb64 = request.data['uid64']
+        uidb64 = request.data['uid_64']
         data_token = request.data['token']
         # Получаем данные из запроса
         password = serializer.create(request.data)
