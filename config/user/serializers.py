@@ -105,7 +105,7 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
     user_id = serializers.CharField()
     
     def validate(self, data):
-        self.user_id = data['user_id']
+        self.user_id = data['email']
         user = CustomUser.objects.get(id=self.user_id)
         if user:
             user_uidb64 = urlsafe_base64_encode(str(user.pk).encode('utf-8')) # encode 
