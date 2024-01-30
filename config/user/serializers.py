@@ -109,8 +109,9 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         user = CustomUser.objects.get(id=self.user_id)
         if user:
             user_uidb64 = urlsafe_base64_encode(str(user.pk).encode('utf-8')) # encode 
-            user_token = Token.objects.get(user=user).token
-            return [user_uidb64, user_token]
+            user_token = Token.objects.get(user=user)
+            print(user_token)
+            return [user_uidb64]
 
             
             
