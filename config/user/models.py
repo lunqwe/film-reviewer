@@ -56,7 +56,6 @@ class Employer(models.Model):
     
     map_location = models.CharField(max_length=255, blank=True, null=True, default='0')
     phone_number = models.CharField(max_length=30, default='0')
-    email = models.EmailField()
 
 class EmployerSocialLink(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
