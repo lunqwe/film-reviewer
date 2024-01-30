@@ -131,14 +131,14 @@ class SaveEmployerSerializer(serializers.Serializer):
     # logo = serializers.ImageField(blank=True, null=True)
     # banner = models.ImageField(blank=True, null=True)
     company_name = serializers.CharField(max_length=255)
-    about = serializers.TextField(blank=True, null=True)
+    about = serializers.CharField(max_length=999, blank=True, null=True)
     
     organization_type = serializers.CharField(max_length=255, default='0')
     industry_types = serializers.CharField(max_length=255, default='0')
     team_size = serializers.CharField(max_length=255, default='0')
     year_of_establishment = serializers.DateField(blank=True, null=True)
     website = serializers.CharField(max_length=255)
-    company_vision = serializers.TextField(blank=True, null=True)
+    company_vision = serializers.CharField(max_length=999, blank=True, null=True)
     
     map_location = serializers.CharField(max_length=255, blank=True, null=True)
     phone_number = serializers.CharField(max_length=30)
