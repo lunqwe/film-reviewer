@@ -155,9 +155,11 @@ class SendResetPassView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         user = CustomUser.objects.get(id=request.data['user_id'])
-        reset_link = serializer.validate(request.data)
+        user_data = serializer.validate(request.data)
+        
+        reset_link = f'http://localhost:3000/reset-password/{user_data[0]}/{user_data[1]}'
         if user:
-            if reset_link:
+            if user_data:
                 sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
                 message = Mail(
                         from_email=From('jobpilot@ukr.net', 'Jobpilot'),
@@ -169,7 +171,7 @@ class SendResetPassView(generics.CreateAPIView):
                 response = sg.send(message)
                 print(response)
                 
-                return Response({'status':'success', 'detail': 'Password reset link sent.'})
+                return Response({'status':'success', 'detail': 'Password reset link sent.', 'user_id': user_data[0], 'token': user_data[1]})
             else:
                 return Response({'status': 'error', 'detail': 'Error creating password reset link: user not found.'})
         else:

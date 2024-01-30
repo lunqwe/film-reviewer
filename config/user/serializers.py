@@ -110,9 +110,8 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         if user:
             user_uidb64 = urlsafe_base64_encode(str(user.pk).encode('utf-8')) # encode 
             user_token = Token.objects.get(user=user)
-            print(user_token)
-            link = f'https://jobpilot-server.onrender.com/api/user/reset-password/{user_uidb64}/{user_token}'
-            return link
+            return list(user_uidb64, user_token)
+
             
             
 class ResetPasswordSerializer(serializers.Serializer):
