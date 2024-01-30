@@ -164,7 +164,7 @@ class SendResetPassView(generics.CreateAPIView):
                 sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
                 message = Mail(
                         from_email=From('jobpilot@ukr.net', 'Jobpilot'),
-                        to_emails=To(user.email),
+                        to_emails=To(user_data[2]),
                         subject='Jobpilot reset password request',
                         plain_text_content=reset_link
                     )
