@@ -115,6 +115,8 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
             
             
 class ResetPasswordSerializer(serializers.Serializer):
+    uid_64 = serializers.CharField(max_length=255)
+    token = serializers.CharField(max_length=255)
     password1 = serializers.CharField(max_length=255)
     password2 = serializers.CharField(max_length=255)
     
