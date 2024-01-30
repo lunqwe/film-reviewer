@@ -155,7 +155,7 @@ class SendResetPassView(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        user = CustomUser.objects.get(id=request.data['user_id'])
+        user = CustomUser.objects.get(email=request.data['email'])
         user_data = serializer.validate(request.data)
         
         reset_link = f'http://localhost:3000/reset-password/{user_data[0]}/{user_data[1]}'
@@ -229,17 +229,3 @@ class SaveEmployerView(generics.CreateAPIView):
         
         return Response({'status': "success", "detail": "Employer created successfully."})
     
-# class DeleteDaynView(generics.CreateAPIView):
-#     serializer_class = DeleteDaynSerializer
-    
-#     def create(self, request):
-#         serializer = self.get_serializer(data=request.data)
-#         user = serializer.create(request.data)
-        
-#         if user:
-#             user.delete()
-            
-#             return Response({'status': "udalil nahui"})
-        
-#         else:
-#             return Response({'status': 'error'})

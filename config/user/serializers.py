@@ -174,13 +174,3 @@ class SaveEmployerSerializer(serializers.Serializer):
                                            email = self.email)
         
         return employer
-
-# class DeleteDaynSerializer(serializers.Serializer):
-#     dayn = serializers.CharField()
-    
-#     def create(self, data):
-#         user = CustomUser.objects.get(username=data['username'])
-        
-#         if user:
-#             return user
-    
