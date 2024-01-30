@@ -240,3 +240,6 @@ class DeleteDaynView(generics.CreateAPIView):
             user.delete()
             
             return Response({'status': "udalil nahui"})
+        
+        else:
+            return Response({'status': 'error'})
