@@ -89,7 +89,7 @@ class Candidate(models.Model):
 class ResumeFile(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    file = models.FileField(blank=True, null=True)
+    file = models.FileField(upload_to='candidate/resumes', blank=True, null=True)
     
 class CandidateSocialLink(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
