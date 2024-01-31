@@ -194,7 +194,7 @@ class ResetPasswordView(generics.CreateAPIView):
             return Response({'status': 'error', 'detail': 'User not found.'}, status=400)
 
         try:
-                # Получаем токен пользователя
+            # Получаем токен пользователя
             token_obj = Token.objects.get(key=token_key)
             print(token_obj)
         except:
