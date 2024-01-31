@@ -188,6 +188,7 @@ class ResetPasswordView(generics.CreateAPIView):
         user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
         try:
             # Получаем пользователя по идентификатору
+            print(token_key)
             user = CustomUser.objects.get(id=user_id)
         except:
             return Response({'status': 'error', 'detail': 'User not found.'}, status=400)
@@ -195,6 +196,7 @@ class ResetPasswordView(generics.CreateAPIView):
         try:
                 # Получаем токен пользователя
             token_obj = Token.objects.get(key=token_key)
+            print(token_obj)
         except:
             return Response({'status': 'error', 'detail': 'Token not found.'}, status=400)
         
