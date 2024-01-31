@@ -95,5 +95,6 @@ class CandidateSocialLink(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
     social_network = models.CharField(max_length=255)
     link = models.URLField(blank=True, null=True)
+
     
     

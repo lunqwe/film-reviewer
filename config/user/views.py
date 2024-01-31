@@ -13,7 +13,7 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer
+from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
 
 
@@ -248,12 +248,44 @@ class CreateResumeView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        resume_created = serializer.create(request.data)
+        resume_id = serializer.create(request.data)
         
-        if not resume_created:
+        if not resume_id:
             return Response({'status': 'error', 'detail': "Error creating resume"})
         
-        return Response({'status':"success", 'detail': "Resume created successfully!"})
+        return Response({'status':"success", 'detail': "Resume created successfully!", 'resume_id': resume_id})
     
     
+class ChangeResumeView(generics.CreateAPIView):
+    serializer_class = ChangeResumeSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
+        resume_changed = serializer.change(request.data)
+        
+        if not resume_changed:
+            return Response({'status': 'error', 'detail': 'Error changing resume'})
+        
+        return Response({'status': 'success', 'detail': 'Resume file changed successfully!'})
+    
+
+class DeleteResumeView(generics.CreateAPIView):
+    serializer_class = DeleteResumeSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        resume_deleted = serializer.delete_resume(request.data)
+        
+        if not resume_deleted:
+            return Response({'status': "error", "detail": "Error deleting resume"})
+        
+        return Response({"status": "success", "detail": "Resume deleted successfully!"})
+        
+    
+    
+    
+            

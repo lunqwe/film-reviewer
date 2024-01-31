@@ -210,15 +210,51 @@ class ChangeCandidatePersonalSerializer(serializers.Serializer):
         
 class CreateResumeSerializer(serializers.Serializer):
     user_id = serializers.CharField()
+    title = serializers.CharField()
     file = serializers.FileField()
+    
+    
     
     def create(self, data):
         user_id = data['user_id']
+        title = data['title']
         file = data['file']
         user = CustomUser.objects.get(id=user_id)
         candidate = Candidate.objects.get(user=user)
         
         if candidate:
-            resume_obj = ResumeFile.objects.create(candidate=candidate, file=file)
+            resume_obj = ResumeFile.objects.create(candidate=candidate, title=title, file=file)
             
-            return resume_obj
+            return resume_obj.id
+
+class ChangeResumeSerializer(serializers.Serializer):
+    resume_id = serializers.CharField()
+    file = serializers.FileField()
+    
+    def change(self, data):
+        resume_id = data['resume_id']
+        file = data['file']
+        
+        resume = ResumeFile.objects.get(id=resume_id)
+        
+        if resume:
+            resume.file.delete()
+            resume.file = file
+            resume.save()
+            
+            return resume
+        
+        
+class DeleteResumeSerializer(serializers.Serializer):
+    resume_id = serializers.CharField()
+    
+    def delete_resume(self, data):
+        resume_id = data['resume_id']
+        resume = ResumeFile.objects.get(id=resume_id)
+        
+        if resume:
+            resume.delete()
+            
+            return True
+        
+        
