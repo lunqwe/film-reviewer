@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from .models import CustomUser, Verificator, Employer
+from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile
 
 User = get_user_model()
 
@@ -173,3 +173,52 @@ class SaveEmployerSerializer(serializers.Serializer):
 
         employer = Employer.objects.create(**employer_data)
         return employer
+
+
+class ChangeCandidatePersonalSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    profile_picture = serializers.ImageField()
+    full_name = serializers.CharField()
+    headline = serializers.CharField()
+    education = serializers.CharField()
+    website = serializers.CharField()
+    
+    def update(self, data):
+        user_id = data['user_id']
+        user = CustomUser.objects.get(id=user_id)
+        candidate = Candidate.objects.get(user=user)
+        
+        if "profile_picture" in data:
+            candidate.profile_picture = data['profile_picture']
+            
+        if "full_name" in data:
+            candidate.full_name = data['full_name']
+            
+        if "headline" in data:
+            candidate.headline = data['headline']
+            
+        if "education" in data:
+            candidate.education = data['education']
+            
+        if 'website' in data:
+            candidate.website = data['website']
+            
+        candidate.save()
+        
+        return candidate
+            
+        
+class CreateResumeSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    file = serializers.FileField()
+    
+    def create(self, data):
+        user_id = data['user_id']
+        file = data['file']
+        user = CustomUser.objects.get(id=user_id)
+        candidate = Candidate.objects.get(user=user)
+        
+        if candidate:
+            resume_obj = ResumeFile.objects.create(candidate=candidate, file=file)
+            
+            return resume_obj

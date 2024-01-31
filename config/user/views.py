@@ -13,8 +13,8 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer
-from .models import CustomUser, Verificator, Candidate, Employer
+from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer
+from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
 
 
 
@@ -223,5 +223,37 @@ class SaveEmployerView(generics.CreateAPIView):
         if not employer_created:
             return Response({"status": 'error', 'detail': "Error creating employer."})
         
-        return Response({'status': "success", "detail": "Employer created successfully."})
+        return Response({'status': "success", "detail": "Employer created successfully!"})
     
+    
+class ChangeCandidatePersonalView(generics.CreateAPIView):
+    serializer_class = ChangeCandidatePersonalSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        candidate = serializer.update(request.data)
+        
+        if not candidate:
+            return Response({'status':'error', 'detail': "Error updating candidate."})
+        
+        return Response({'status': "success", 'detail': "Candidate info changed successfully!"})
+    
+        
+class CreateResumeView(generics.CreateAPIView):
+    serializer_class = CreateResumeSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        resume_created = serializer.create(request.data)
+        
+        if not resume_created:
+            return Response({'status': 'error', 'detail': "Error creating resume"})
+        
+        return Response({'status':"success", 'detail': "Resume created successfully!"})
+    
+    
+        

@@ -69,7 +69,7 @@ class EmployerSocialLink(models.Model):
 
 class Candidate(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='candidate/profile_pics', blank=True, null=True)
     headlinee = models.CharField(max_length=255, default='0')
     experiences = models.CharField(max_length=999, default='0')
     educations = models.CharField(max_length=999, default='0')
