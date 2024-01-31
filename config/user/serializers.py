@@ -166,13 +166,14 @@ class SaveEmployerSerializer(serializers.Serializer):
                                            company_name=self.company_name,
                                            about=self.about,
                                            organization_type=self.organization_type,
-                                           industry = self.industry_types,
+                                           industry_types = self.industry_types,
                                            team_size = self.team_size,
                                            website = self.website,
                                            year_of_establishment = self.year_of_establishment,
                                            company_vision= self.company_vision,
                                            map_location = self.map_location,
-                                           phone_number = self.phone_number,
-                                           email = self.email)
+                                           phone_number = self.phone_number)
+        
+                                        #    email = self.email
         
         return employer
