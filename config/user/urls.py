@@ -1,5 +1,8 @@
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView
+
 
 urlpatterns = [
     path('register/', CreateUserView.as_view(), name='registration'),
@@ -10,3 +13,5 @@ urlpatterns = [
     path('reset-password/', ResetPasswordView.as_view(), name='password-reset'),
     path('create-employer/', SaveEmployerView.as_view(), name='create-employer')
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

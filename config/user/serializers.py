@@ -130,50 +130,46 @@ class ResetPasswordSerializer(serializers.Serializer):
         
 class SaveEmployerSerializer(serializers.Serializer):
     user_id = serializers.CharField(max_length=255)
-    # logo = serializers.ImageField(blank=True, null=True)
-    # banner = models.ImageField(blank=True, null=True)
+    logo = serializers.ImageField(required=False, allow_null=True)
+    banner = serializers.ImageField(required=False, allow_null=True)
     company_name = serializers.CharField(max_length=255)
     about = serializers.CharField(max_length=999)
-    
     organization_type = serializers.CharField(max_length=255)
     industry_types = serializers.CharField(max_length=255)
     team_size = serializers.CharField(max_length=255)
     year_of_establishment = serializers.DateField()
     website = serializers.CharField(max_length=255)
     company_vision = serializers.CharField(max_length=999)
-    
     map_location = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=30)
     email = serializers.EmailField()
-    
-    def create(self, data):
-        self.user_id = data.get('user_id')
-        self.company_name = data.get('company_name')
-        self.about = data.get('about')
-        self.organization_type = data.get('organization_type')
-        self.industry_types = data.get('industry_types')
-        self.team_size = data.get('team_size')
-        self.year_of_establishment = data.get('year_of_establishment')
-        self.website = data.get('website')
-        self.company_vision = data.get('company_vision')
-        self.map_location = data.get('map_location')
-        self.phone_number = data.get('phone_number')
-        self.email = data.get('email')
+
+    def create(self, validated_data):
+        user_id = validated_data.get('user_id')
+        user = CustomUser.objects.get(id=user_id)
+
+        employer_data = {
+            'user': user,
+            'company_name': validated_data['company_name'],
+            'about': validated_data['about'],
+            'organization_type': validated_data['organization_type'],
+            'industry_types': validated_data['industry_types'],
+            'team_size': validated_data['team_size'],
+            'year_of_establishment': validated_data['year_of_establishment'],
+            'website': validated_data['website'],
+            'company_vision': validated_data['company_vision'],
+            'map_location': validated_data['map_location'],
+            'phone_number': validated_data['phone_number'],
+            # 'email': validated_data['email'],
+        }
         
-        user = CustomUser.objects.get(id=self.user_id)
-        
-        employer = Employer.objects.create(user=user,
-                                           company_name=self.company_name,
-                                           about=self.about,
-                                           organization_type=self.organization_type,
-                                           industry_types = self.industry_types,
-                                           team_size = self.team_size,
-                                           website = self.website,
-                                           year_of_establishment = self.year_of_establishment,
-                                           company_vision= self.company_vision,
-                                           map_location = self.map_location,
-                                           phone_number = self.phone_number)
-        
-                                        #    email = self.email
-        
+        # Проверяем наличие логотипа
+        if 'logo' in validated_data:
+            employer_data['logo'] = validated_data['logo']
+
+        # Проверяем наличие баннера
+        if 'banner' in validated_data:
+            employer_data['banner'] = validated_data['banner']
+
+        employer = Employer.objects.create(**employer_data)
         return employer

@@ -42,8 +42,8 @@ class Verificator(models.Model):
     
 class Employer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    logo = models.ImageField(blank=True, null=True)
-    banner = models.ImageField(blank=True, null=True)
+    logo = models.ImageField(upload_to='media/logo', blank=True, null=True)
+    banner = models.ImageField(upload_to='media/banners', blank=True, null=True)
     company_name = models.CharField(max_length=255, default="0")
     about = models.TextField(blank=True, null=True, default='0')
     
@@ -56,6 +56,9 @@ class Employer(models.Model):
     
     map_location = models.CharField(max_length=255, blank=True, null=True, default='0')
     phone_number = models.CharField(max_length=30, default='0')
+    
+    def __str__(self):
+        return f'{self.company_name}({self.user.username})'
 
 class EmployerSocialLink(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
