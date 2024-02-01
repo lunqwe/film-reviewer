@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView,  ChangeCandidatePersonalView, CreateResumeView, ChangeResumeView, DeleteResumeView, ChangeEmployerCompanyInfoView
+from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView,  ChangeCandidatePersonalView, CreateResumeView, ChangeResumeView, DeleteResumeView, ChangeEmployerCompanyInfoView, ChangeEmployerFoundingInfoView
 
 
 urlpatterns = [
@@ -12,7 +12,8 @@ urlpatterns = [
     path('password-reset-request/', SendResetPassView.as_view(), name='password-reset-request'),
     path('reset-password/', ResetPasswordView.as_view(), name='password-reset'),
     path('create-employer/', SaveEmployerView.as_view(), name='create-employer'),
-    path('change-employer-company-info/', ChangeEmployerCompanyInfoView.as_view(), name='change-company-info'),
+    path('change-company-info/', ChangeEmployerCompanyInfoView.as_view(), name='change-company-info'),
+    path('change-founding-info/', ChangeEmployerFoundingInfoView.as_view(), name='change-founding-info'),
     path('change-candidate-personal/', ChangeCandidatePersonalView.as_view(), name='change-candidate-personal'),
     path('create-resume/', CreateResumeView.as_view(), name='create-resume'), 
     path('change-resume/', ChangeResumeView.as_view(), name='change-resume'),

@@ -237,7 +237,7 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
         if not employer_changed:
             return Response({'status': 'error', 'detail': 'Error changing employer data.'})
         
-        return Response({'status': "success", 'detail': 'Employer data changed successfully!'})
+        return Response({'status': "success", 'detail': 'Employer company info changed successfully!'})
     
     
 class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
@@ -247,8 +247,12 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        return Response({'status': '1234'})
+        employer_changed = serializer.change_founding(request.data)
         
+        if not employer_changed:
+            return Response({"status": 'error', 'detail': 'Failed to change employer`s founding info.'})
+        
+        return Response({'status':"success", 'detail': "Employer founding info changed successfully!"})
     
     
 class ChangeCandidatePersonalView(generics.CreateAPIView):

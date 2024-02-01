@@ -204,8 +204,35 @@ class ChangeEmployerCompanyInfoSerializer(serializers.Serializer):
     
     
 class ChangeEmployerFoundingInfoSerializer(serializers.Serializer):
-    pass
+    user_id = serializers.CharField()
+    organization_type = serializers.CharField(required=False, allow_null=True)
+    industry_types = serializers.CharField(required=False, allow_null=True)
+    team_size = serializers.CharField(required=False, allow_null=True)
+    year_of_establishment = serializers.DateField(required=False, allow_null=True)
+    website = serializers.CharField(required=False, allow_null=True)
+    company_vision = serializers.CharField(required=False, allow_null=True)
+    
+    def change_founding(self, data):
+        user_id = data['user_id']
+        user = CustomUser.objects.get(id=user_id)
+        employer = Employer.objects.get(user=user)
         
+        if 'organization_type' in data:
+            employer.organization_type = data['organization_type']
+        if 'industy_types' in data:
+            employer.organization_type = data['industry_types']
+        if 'team_size' in data:
+            employer.team_size = data['team_size']
+        if 'year_of_establishment' in data:
+            employer.year_of_establishment = data['year_of_establishment']
+        if 'website' in data:
+            employer.website = data['website']
+        if 'company_vision' in data:
+            employer.company_vision = data['company_vision']
+        
+        employer.save()
+        
+        return employer
 
 
 
