@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile
+from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink
 
 User = get_user_model()
 
@@ -128,195 +128,209 @@ class ResetPasswordSerializer(serializers.Serializer):
             return self.password1
         
         
-class SaveEmployerSerializer(serializers.Serializer):
-    user_id = serializers.CharField(max_length=255)
-    logo = serializers.ImageField(required=False, allow_null=True)
-    banner = serializers.ImageField(required=False, allow_null=True)
-    company_name = serializers.CharField(max_length=255)
-    about = serializers.CharField(max_length=999)
-    organization_type = serializers.CharField(max_length=255)
-    industry_types = serializers.CharField(max_length=255)
-    team_size = serializers.CharField(max_length=255)
-    year_of_establishment = serializers.DateField()
-    website = serializers.CharField(max_length=255)
-    company_vision = serializers.CharField(max_length=999)
-    map_location = serializers.CharField(max_length=255)
-    phone_number = serializers.CharField(max_length=30)
-    email = serializers.EmailField()
+class ChangePasswordSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    current_password = serializers.CharField()
+    password1 = serializers.CharField()
+    password2 = serializers.CharField()
+    
+    def change(self, user, data):
+        password1 = data['password1']
+        password2 = data['password2']
+        
+        if password1 == password2:
+            user.set_password(password1)
+            user.save()
+            return user
+        
+        
+        
+        
+class SaveEmployerSerializer(serializers.ModelSerializer):
 
-    def create(self, validated_data):
-        user_id = validated_data.get('user_id')
-        user = CustomUser.objects.get(id=user_id)
+    
+    class Meta:
+        model = Employer
+        fields = ['user_id', 'logo', 'banner', 'company_name', 'about', 'organization_type', 'industry_types', 'team_size', 'website', 'year_of_establishment', 'company_vision', 'map_location', 'phone_number']
+        
+        extra_kwargs = {
+            'logo': {'required': False},
+            'banner': {'required': False},
+            'company_name': {'required': False},
+            'about': {'required': False},
+            'organization_type': {'required': False},
+            'industry_types': {'required': False},
+            'team_size': {'required': False},
+            'website': {'required': False},
+            'year_of_establishment': {'required': False},
+            'company_vision': {'required': False},
+            'map_location': {'required': False},
+            'phone_number': {'required': False},
+            
+        }
 
-        employer_data = {
-            'user': user,
-            'company_name': validated_data['company_name'],
-            'about': validated_data['about'],
-            'organization_type': validated_data['organization_type'],
-            'industry_types': validated_data['industry_types'],
-            'team_size': validated_data['team_size'],
-            'year_of_establishment': validated_data['year_of_establishment'],
-            'website': validated_data['website'],
-            'company_vision': validated_data['company_vision'],
-            'map_location': validated_data['map_location'],
-            'phone_number': validated_data['phone_number'],
-            # 'email': validated_data['email'],
+    def update(self, instance, validated_data):
+        instance.logo = validated_data.get('logo', instance.logo)
+        instance.banner = validated_data.get('banner', instance.banner)
+        instance.company_name = validated_data.get('company_name', instance.company_name)
+        instance.about = validated_data.get('about', instance.about)
+        instance.organization_type = validated_data.get('organization_type', instance.organization_type)
+        instance.industry_types = validated_data.get('industry_types', instance.industry_types)
+        instance.team_size = validated_data.get('team_size', instance.team_size)
+        instance.website = validated_data.get('website', instance.website)
+        instance.year_of_establishment = validated_data.get('year_of_establishment', instance.year_of_establishment)
+        instance.company_vision = validated_data.get('company_vision', instance.company_vision)
+        instance.map_location = validated_data.get('map_location', instance.map_location)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        
+        instance.save()
+        return instance
+    
+    
+class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Employer
+        fields = ['user_id', 'logo', 'banner', 'company_name', 'about']
+        
+        extra_kwargs = {
+            'logo': {'required': False},
+            'banner': {'required': False},
+            'company_name': {'required': False},
+            'about' : {'required': False}
         }
         
-        # Проверяем наличие логотипа
-        if 'logo' in validated_data:
-            employer_data['logo'] = validated_data['logo']
-
-        # Проверяем наличие баннера
-        if 'banner' in validated_data:
-            employer_data['banner'] = validated_data['banner']
-
-        employer = Employer.objects.create(**employer_data)
-        return employer
-
-class ChangeEmployerCompanyInfoSerializer(serializers.Serializer):
-    user_id = serializers.CharField()
-    logo = serializers.ImageField(required=False, allow_null=True)
-    banner = serializers.ImageField(required=False, allow_null=True)
-    company_name = serializers.CharField(required=False, allow_null=True)
-    about = serializers.CharField(required=False, allow_null=True)
     
-    def change(self, data):
-        user_id = data['user_id']
-        user = CustomUser.objects.get(id=user_id)
-        employer = Employer.objects.get(user=user)
+    def update(self, instance, data):
         
-        if 'logo' in data:
-            employer.logo = data['logo']
-            
-        if 'banner' in data:
-            employer.banner = data['banner']
+        instance.logo = data.get('logo', instance.logo)
+        instance.banner = data.get('banner', instance.banner)
+        instance.company_name = data.get('company_name', instance.company_name)
+        instance.about = data.get('about', instance.about)
         
-        if 'company_name' in data:
-            employer.company_name = data['company_name']
-        
-        if 'about' in data:
-            employer.about = data['about']
-        
-        employer.save()
-        
-        return employer
+        instance.save()
+        return instance
     
     
-class ChangeEmployerFoundingInfoSerializer(serializers.Serializer):
-    user_id = serializers.CharField()
-    organization_type = serializers.CharField(required=False, allow_null=True)
-    industry_types = serializers.CharField(required=False, allow_null=True)
-    team_size = serializers.CharField(required=False, allow_null=True)
-    year_of_establishment = serializers.DateField(required=False, allow_null=True)
-    website = serializers.CharField(required=False, allow_null=True)
-    company_vision = serializers.CharField(required=False, allow_null=True)
+class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
     
-    def change_founding(self, data):
-        user_id = data['user_id']
-        user = CustomUser.objects.get(id=user_id)
-        employer = Employer.objects.get(user=user)
+    class Meta:
+        model = Employer
+        fields = ['user_id', 'organization_type', 'industry_types', 'team_size', 'year_of_establishment', 'website', 'company_vision']
         
-        if 'organization_type' in data:
-            employer.organization_type = data['organization_type']
-        if 'industy_types' in data:
-            employer.organization_type = data['industry_types']
-        if 'team_size' in data:
-            employer.team_size = data['team_size']
-        if 'year_of_establishment' in data:
-            employer.year_of_establishment = data['year_of_establishment']
-        if 'website' in data:
-            employer.website = data['website']
-        if 'company_vision' in data:
-            employer.company_vision = data['company_vision']
+        extra_kwargs = {
+            'organization_type': {'required': False},
+            'industry_types': {'required': False},
+            'team_size': {'required': False},
+            'year_of_establishment': {'required': False},
+            'website': {'required': False},
+            'company_vision': {'required': False}
+        }
         
-        employer.save()
+    def change_founding(self, instance,  data):
+        instance.organization_type = data.get('organization_type', instance.organization_type)
+        instance.industry_types = data.get('industry_types', instance.industry_types)
+        instance.team_size = data.get('team_size', instance.team_size)
+        instance.year_of_establishment = data.get('year_of_establishment', instance.year_of_establishment)
+        instance.website = data.get('website', instance.website)
+        instance.company_vision = data.get('company_vision', instance.company_vision)
         
-        return employer
-
+        instance.save()
+        return instance
+    
+class CreateEmployerSocialSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = EmployerSocialLink
+        fields = ['social_network', 'link']
+        
+    def create(self, instance, data):
+        instance.social_network = data.get('social_network', instance.social_network)
+        instance.link = data.get('link', instance.link)
+        
+        instance.save()
+        return instance
+    
+class ChangeEmployerContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employer
+        fields = ['map_location', 'phone_number', 'email']
+        extra_kwargs = {
+            'map_location': {'required': False},
+            'phone_number': {'required': False},
+            'email': {'required': False}
+        }
+        
+    def change(self, instance, data):
+        instance.map_location = data.get('map_location', instance.map_location)
+        instance.phone_number = data.get('phone_number', instance.phone_number)
+        instance.email = data.get('email', instance.email)
+        
+        instance.save()
+        return instance
+        
 
 
-class ChangeCandidatePersonalSerializer(serializers.Serializer):
-    user_id = serializers.CharField(required=False, allow_null=True)
-    profile_picture = serializers.ImageField(required=False, allow_null=True)
-    full_name = serializers.CharField(required=False, allow_null=True)
-    headline = serializers.CharField(required=False, allow_null=True)
-    education = serializers.CharField(required=False, allow_null=True)
-    website = serializers.CharField(required=False, allow_null=True)
+class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
     
-    def update(self, data):
-        user_id = data['user_id']
-        user = CustomUser.objects.get(id=user_id)
-        candidate = Candidate.objects.get(user=user)
-        
-        if "profile_picture" in data:
-            candidate.profile_picture = data['profile_picture']
-            
-        if "full_name" in data:
-            candidate.full_name = data['full_name']
-            
-        if "headline" in data:
-            candidate.headline = data['headline']
-            
-        if "education" in data:
-            candidate.education = data['education']
-            
-        if 'website' in data:
-            candidate.website = data['website']
-            
-        candidate.save()
-        
-        return candidate
-            
-        
-class CreateResumeSerializer(serializers.Serializer):
-    user_id = serializers.CharField()
-    title = serializers.CharField()
-    file = serializers.FileField()
-    
-    
-    
-    def create(self, data):
-        user_id = data['user_id']
-        title = data['title']
-        file = data['file']
-        user = CustomUser.objects.get(id=user_id)
-        candidate = Candidate.objects.get(user=user)
-        
-        if candidate:
-            resume_obj = ResumeFile.objects.create(candidate=candidate, title=title, file=file)
-            
-            return resume_obj.id
+    class Meta:
+        model = Candidate
+        fields = ['user_id', 'profile_picture', 'full_name', 'headline', 'educations', 'website']
+        extra_kwargs = {
+            'user_id': {'required': False},
+            'profile_picture': {'required': False},
+            'full_name': {'required': False},
+            'headline': {'required': False},
+            'educations': {'required': False},
+            'website': {'required': False}
+        }
 
-class ChangeResumeSerializer(serializers.Serializer):
-    resume_id = serializers.CharField()
-    file = serializers.FileField()
-    
-    def change(self, data):
-        resume_id = data['resume_id']
-        file = data['file']
-        
-        resume = ResumeFile.objects.get(id=resume_id)
-        
-        if resume:
-            resume.file.delete()
-            resume.file = file
-            resume.save()
+    def update(self, instance, validated_data):
+        instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
+        instance.full_name = validated_data.get('full_name', instance.full_name)
+        instance.headline = validated_data.get('headline', instance.headline)
+        instance.educations = validated_data.get('educations', instance.educations)
+        instance.website = validated_data.get('website', instance.website)
+        instance.save()
+        return instance
             
-            return resume
         
-        
-class DeleteResumeSerializer(serializers.Serializer):
-    resume_id = serializers.CharField()
+class CreateResumeSerializer(serializers.ModelSerializer):
     
-    def delete_resume(self, data):
-        resume_id = data['resume_id']
-        resume = ResumeFile.objects.get(id=resume_id)
+    class Meta:
+        model = ResumeFile
+        fields = ['title', 'file']
         
-        if resume:
-            resume.delete()
-            
-            return True
+    def create(self, instance, data):
+        instance.title = data.get('title', instance.title)
+        instance.file = data.get('file', instance.file)
+        
+        instance.save()
+        return instance
+    
+    
+
+class ChangeResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeFile
+        fields = ['title', 'file']
+    
+    def change(self, instance, data):
+        instance.title = data.get('title', instance.title)
+        instance.file = data.get('file', instance.file)
+        
+        instance.save()
+        return instance
+        
+        
+class DeleteResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResumeFile
+        fields = ['id']
+    
+    def delete_resume(self, instance, data):
+        instance.delete()
+        return True
         
         
         

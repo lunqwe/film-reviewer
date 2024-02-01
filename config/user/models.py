@@ -56,21 +56,22 @@ class Employer(models.Model):
     
     map_location = models.CharField(max_length=255, blank=True, null=True, default='0')
     phone_number = models.CharField(max_length=30, default='0')
-    
+    email = models.EmailField(blank=True, null=True)
     def __str__(self):
         return f'{self.company_name}({self.user.username})'
 
 class EmployerSocialLink(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
-    social_network = models.CharField(max_length=255)
-    link = models.URLField()
+    social_network = models.CharField(max_length=255, blank=True, null=True)
+    link = models.URLField(blank=True, null=True)
     
     
 
 class Candidate(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='candidate/profile_pics', blank=True, null=True)
-    headlinee = models.CharField(max_length=255, default='0')
+    full_name = models.CharField(max_length=255, default='0')
+    headline = models.CharField(max_length=255, default='0')
     experiences = models.CharField(max_length=999, default='0')
     educations = models.CharField(max_length=999, default='0')
     website = models.CharField(max_length=999, default='0')

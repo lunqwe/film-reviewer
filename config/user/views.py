@@ -13,8 +13,10 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, ChangeEmployerCompanyInfoSerializer, ChangeEmployerFoundingInfoSerializer,SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer
-from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
+
+from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, CreateEmployerSocialSerializer, ChangeEmployerCompanyInfoSerializer, ChangeEmployerFoundingInfoSerializer,SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer, ChangeEmployerContactSerializer,ChangePasswordSerializer
+
+from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile, EmployerSocialLink
 
 
 
@@ -209,6 +211,24 @@ class ResetPasswordView(generics.CreateAPIView):
             return Response({'status': 'error', 'detail': "Passwords do not match."})
             
         return Response({'status': 'success', 'detail': 'Password changed successfully!', 'note': 'You must relogin'})
+    
+class ChangePasswordView(generics.CreateAPIView):
+    serializer_class = ChangePasswordSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer()
+        current_password = request.data['current_password']
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        
+        if user.check_password(current_password):
+            change_password = serializer.change(user, request.data)
+
+            if change_password:
+                return Response({'status':'success', 'detail': "Password changed successfully!"})       
+            else:
+                return Response({'status': 'error', 'detail': "new_password1 & new_password2 didnt match."})
+        else:
+            return Response({'status':'error', 'detail': "Wrong current password."}) 
         
 
 class SaveEmployerView(generics.CreateAPIView):
@@ -218,7 +238,9 @@ class SaveEmployerView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        employer_created = serializer.create(request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        employer = Employer.objects.create(user=user)
+        employer_created = serializer.update(employer, request.data)
         
         if not employer_created:
             return Response({"status": 'error', 'detail': "Error creating employer."})
@@ -232,7 +254,9 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        employer_changed = serializer.change(request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        employer = Employer.objects.get(user=user)
+        employer_changed = serializer.update(employer, request.data)
         
         if not employer_changed:
             return Response({'status': 'error', 'detail': 'Error changing employer data.'})
@@ -247,14 +271,48 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        employer_changed = serializer.change_founding(request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        employer = Employer.objects.get(user=user)
+        employer_changed = serializer.change_founding(employer, request.data)
         
         if not employer_changed:
             return Response({"status": 'error', 'detail': 'Failed to change employer`s founding info.'})
         
         return Response({'status':"success", 'detail': "Employer founding info changed successfully!"})
     
+class CreateEmployerSocialView(generics.CreateAPIView):
+    serializer_class = CreateEmployerSocialSerializer
     
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        employer = Employer.objects.get(user=user)
+        employer_link = EmployerSocialLink.objects.create(employer=employer)
+        link_created = serializer.create(employer_link, request.data)
+        
+        if not link_created:
+            return Response({'status': 'error', 'detail': 'Error creating link model'})
+        
+        return Response({'status': 'success', 'detail': "Link added successfully!"})        
+
+
+class ChangeEmployerContactView(generics.CreateAPIView):
+    serializer_class = ChangeEmployerContactSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        employer = Employer.objects.get(user=user)
+        employer_changed = serializer.change(employer, request.data)
+        
+        if not employer_changed:
+            return Response({'status': 'error', 'detail': 'Error changing employer contacts'})
+        
+        return Response({'status': 'success', 'detail': "Employer contacts changed successfully!"})
+    
+        
+
 class ChangeCandidatePersonalView(generics.CreateAPIView):
     serializer_class = ChangeCandidatePersonalSerializer
     
@@ -262,7 +320,10 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        candidate = serializer.update(request.data)
+        user_id = request.data['user_id']
+        user = CustomUser.objects.get(id=user_id)
+        candidate_obj = Candidate.objects.get(user=user)
+        candidate = serializer.update(candidate_obj, request.data)
         
         if not candidate:
             return Response({'status':'error', 'detail': "Error updating candidate."})
@@ -277,12 +338,15 @@ class CreateResumeView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        resume_id = serializer.create(request.data)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        candidate = Candidate.objects.get(user=user)
+        resume = ResumeFile.objects.create(candidate=candidate)
+        resume_created = serializer.create(resume, request.data)
         
-        if not resume_id:
+        if not resume_created:
             return Response({'status': 'error', 'detail': "Error creating resume"})
         
-        return Response({'status':"success", 'detail': "Resume created successfully!", 'resume_id': resume_id})
+        return Response({'status':"success", 'detail': "Resume created successfully!", 'resume_id': resume.id})
     
     
 class ChangeResumeView(generics.CreateAPIView):
@@ -292,7 +356,8 @@ class ChangeResumeView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        resume_changed = serializer.change(request.data)
+        resume = ResumeFile.objects.get(id=request.data['resume_id'])
+        resume_changed = serializer.change(resume, request.data)
         
         if not resume_changed:
             return Response({'status': 'error', 'detail': 'Error changing resume'})
@@ -307,7 +372,8 @@ class DeleteResumeView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        resume_deleted = serializer.delete_resume(request.data)
+        resume = ResumeFile.objects.get(id=request.data['resume_id'])
+        resume_deleted = serializer.delete_resume(resume, request.data)
         
         if not resume_deleted:
             return Response({'status': "error", "detail": "Error deleting resume"})

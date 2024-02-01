@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView,  ChangeCandidatePersonalView, CreateResumeView, ChangeResumeView, DeleteResumeView, ChangeEmployerCompanyInfoView, ChangeEmployerFoundingInfoView
+from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView,  ChangeCandidatePersonalView, CreateResumeView, ChangeResumeView, DeleteResumeView, ChangeEmployerCompanyInfoView, ChangeEmployerFoundingInfoView, CreateEmployerSocialView, ChangeEmployerContactView, ChangePasswordView
 
 
 urlpatterns = [
@@ -11,9 +11,12 @@ urlpatterns = [
     path('check-verification/', CheckVerificationView.as_view(), name='check-verification'),
     path('password-reset-request/', SendResetPassView.as_view(), name='password-reset-request'),
     path('reset-password/', ResetPasswordView.as_view(), name='password-reset'),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('create-employer/', SaveEmployerView.as_view(), name='create-employer'),
     path('change-company-info/', ChangeEmployerCompanyInfoView.as_view(), name='change-company-info'),
     path('change-founding-info/', ChangeEmployerFoundingInfoView.as_view(), name='change-founding-info'),
+    path('add-employer-link/', CreateEmployerSocialView.as_view(), name='add-employer-link'),
+    path('change-employer-contacts/', ChangeEmployerContactView.as_view(), name='change-employer-contact'),
     path('change-candidate-personal/', ChangeCandidatePersonalView.as_view(), name='change-candidate-personal'),
     path('create-resume/', CreateResumeView.as_view(), name='create-resume'), 
     path('change-resume/', ChangeResumeView.as_view(), name='change-resume'),
