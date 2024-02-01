@@ -174,14 +174,48 @@ class SaveEmployerSerializer(serializers.Serializer):
         employer = Employer.objects.create(**employer_data)
         return employer
 
+class ChangeEmployerCompanyInfoSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    logo = serializers.ImageField(required=False, allow_null=True)
+    banner = serializers.ImageField(required=False, allow_null=True)
+    company_name = serializers.CharField(required=False, allow_null=True)
+    about = serializers.CharField(required=False, allow_null=True)
+    
+    def change(self, data):
+        user_id = data['user_id']
+        user = CustomUser.objects.get(id=user_id)
+        employer = Employer.objects.get(user=user)
+        
+        if 'logo' in data:
+            employer.logo = data['logo']
+            
+        if 'banner' in data:
+            employer.banner = data['banner']
+        
+        if 'company_name' in data:
+            employer.company_name = data['company_name']
+        
+        if 'about' in data:
+            employer.about = data['about']
+        
+        employer.save()
+        
+        return employer
+    
+    
+class ChangeEmployerFoundingInfoSerializer(serializers.Serializer):
+    pass
+        
+
+
 
 class ChangeCandidatePersonalSerializer(serializers.Serializer):
-    user_id = serializers.CharField()
-    profile_picture = serializers.ImageField()
-    full_name = serializers.CharField()
-    headline = serializers.CharField()
-    education = serializers.CharField()
-    website = serializers.CharField()
+    user_id = serializers.CharField(required=False, allow_null=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    full_name = serializers.CharField(required=False, allow_null=True)
+    headline = serializers.CharField(required=False, allow_null=True)
+    education = serializers.CharField(required=False, allow_null=True)
+    website = serializers.CharField(required=False, allow_null=True)
     
     def update(self, data):
         user_id = data['user_id']
@@ -256,5 +290,6 @@ class DeleteResumeSerializer(serializers.Serializer):
             resume.delete()
             
             return True
+        
         
         

@@ -13,7 +13,7 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer
+from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, ChangeEmployerCompanyInfoSerializer, ChangeEmployerFoundingInfoSerializer,SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
 
 
@@ -224,6 +224,31 @@ class SaveEmployerView(generics.CreateAPIView):
             return Response({"status": 'error', 'detail': "Error creating employer."})
         
         return Response({'status': "success", "detail": "Employer created successfully!"})
+    
+class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
+    serializer_class = ChangeEmployerCompanyInfoSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        employer_changed = serializer.change(request.data)
+        
+        if not employer_changed:
+            return Response({'status': 'error', 'detail': 'Error changing employer data.'})
+        
+        return Response({'status': "success", 'detail': 'Employer data changed successfully!'})
+    
+    
+class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
+    serializer_class = ChangeEmployerFoundingInfoSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        return Response({'status': '1234'})
+        
     
     
 class ChangeCandidatePersonalView(generics.CreateAPIView):
