@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink
+from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink, CandidateSocialLink
 
 User = get_user_model()
 
@@ -328,9 +328,53 @@ class DeleteResumeSerializer(serializers.ModelSerializer):
         model = ResumeFile
         fields = ['id']
     
-    def delete_resume(self, instance, data):
+    def delete_resume(self, instance):
         instance.delete()
         return True
         
         
+    
+class ChangeCandidateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = ['nationality', 'date_of_birth', 'gender', 'marital_status', 'biography']
         
+        extra_kwargs = {
+            'nationality': {'required': False},
+            'date_of_birth': {'required': False},
+            'gender': {'required': False},
+            'marital_status': {'required': False},
+            'biography': {'required': False}
+        }
+        
+    def change_profile(self, candidate, data):
+        candidate.nationality = data.get('nationality', candidate.nationality)
+        candidate.date_of_birth = data.get('date_of_birth', candidate.date_of_birth)
+        candidate.gender = data.get('gender', candidate.gender)
+        candidate.marital_status = data.get('marital_status', candidate.marital_status)
+        candidate.biography = data.get('biography', candidate.biography)
+        
+        candidate.save()
+        return candidate
+    
+    
+class CreateCandidateSocialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateSocialLink
+        fields = ['social_network', 'link']
+        
+    def create_link(self, instance, data):
+        instance.social_network = data.get('social_network', instance.social_network)
+        instance.link = data.get('link', instance.link)
+        
+        instance.save()
+        return instance
+    
+class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateSocialLink
+        fields = ['id']
+    
+    def delete_link(self, instance):
+        instance.delete()
+        return True

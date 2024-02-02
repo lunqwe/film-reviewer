@@ -13,9 +13,7 @@ import os
 import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
-
-from .serializers import UserSerializer, LoginSerializer, SaveEmployerSerializer, ChangeCandidatePersonalSerializer, CreateEmployerSocialSerializer, ChangeEmployerCompanyInfoSerializer, ChangeEmployerFoundingInfoSerializer,SendVerificationSerializer, CheckVerificationSerializer, ResetPasswordRequestSerializer, ResetPasswordSerializer, CreateResumeSerializer, ChangeResumeSerializer, DeleteResumeSerializer, ChangeEmployerContactSerializer,ChangePasswordSerializer
-
+from .serializers import *
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile, EmployerSocialLink
 
 
@@ -379,7 +377,56 @@ class DeleteResumeView(generics.CreateAPIView):
             return Response({'status': "error", "detail": "Error deleting resume"})
         
         return Response({"status": "success", "detail": "Resume deleted successfully!"})
+    
+class ChangeCandidateProfileView(generics.CreateAPIView):
+    serializer_class = ChangeCandidateProfileSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        candidate = Candidate.objects.get(user=user)
+        change_personal = serializer.change_profile(candidate, request.data)
+        
+        if not change_personal:
+            return Response({'status': 'error', 'detail': "Failed to change profile candidate data."})
+        
+        return Response({'status': 'success', 'detail': 'Candidate`s profile data changed successfully!'})
+    
+class CreateCandidateSocialView(generics.CreateAPIView):
+    serializer_class = CreateCandidateSocialSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        candidate = Candidate.objects.get(user=user)
+        candidate_social = CandidateSocialLink.objects.create(candidate=candidate)
+        set_link = serializer.create_link(candidate_social, request.data)
+        
+        if not set_link:
+            return Response({'status': 'error', 'detail': "Error creating candidate social link"})
+        
+        return Response({'status': 'success', 'detail': 'Candidate social network link created successfully!', 'id': set_link.id})
+    
+
+class DeleteCandidateSocialView(generics.CreateAPIView):
+    serializer_class = DeleteCandidateSocialSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        link = CandidateSocialLink.objects.get(id=request.data['id'])
+        delete_link = serializer.delete_link(link)
+        
+        if not delete_link:
+            return Response({'status': 'error', 'detail': "Error deleting candidate social link"})
+        
+        return Response({'status': 'success', 'detail': "Deleted successfully!"})
+    
+    
     
     
     

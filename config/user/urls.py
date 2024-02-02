@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import CreateUserView, LoginView, VerifyEmailView, CheckVerificationView, SendResetPassView, ResetPasswordView, SaveEmployerView,  ChangeCandidatePersonalView, CreateResumeView, ChangeResumeView, DeleteResumeView, ChangeEmployerCompanyInfoView, ChangeEmployerFoundingInfoView, CreateEmployerSocialView, ChangeEmployerContactView, ChangePasswordView
+from .views import *
 
 
 urlpatterns = [
@@ -18,10 +18,12 @@ urlpatterns = [
     path('add-employer-link/', CreateEmployerSocialView.as_view(), name='add-employer-link'),
     path('change-employer-contacts/', ChangeEmployerContactView.as_view(), name='change-employer-contact'),
     path('change-candidate-personal/', ChangeCandidatePersonalView.as_view(), name='change-candidate-personal'),
+    path('change-candidate-profile/', ChangeCandidateProfileView.as_view(), name='change-candidate-profile'),
+    path('add-candidate-link/', CreateCandidateSocialView.as_view(), name='add-candidate-link'),
+    path('delete-candidate-link/', DeleteCandidateSocialView.as_view(), name='delete-candidate-link'),
     path('create-resume/', CreateResumeView.as_view(), name='create-resume'), 
     path('change-resume/', ChangeResumeView.as_view(), name='change-resume'),
     path('delete-resume/', DeleteResumeView.as_view(), name='delete-resume'),
-
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
