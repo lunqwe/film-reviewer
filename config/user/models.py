@@ -85,7 +85,26 @@ class Candidate(models.Model):
     map_location = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     
-
+    #notifications
+    shortlist = models.BooleanField(default=False)
+    expire = models.BooleanField(default=False)
+    five_job_alerts = models.BooleanField(default=False)
+    profile_saved = models.BooleanField(default=False)
+    rejection = models.BooleanField(default=False)
+    
+    profile_privacy = models.BooleanField(default=False)
+    resume_privacy = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f'{self.id}({self.user.username})'
+    
+    
+class CandidateJobAlertNotification(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    role = models.CharField(max_length=255),
+    location = models.CharField(max_length=255)
+    
+    
     
 class ResumeFile(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)

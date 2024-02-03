@@ -378,3 +378,43 @@ class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
     def delete_link(self, instance):
         instance.delete()
         return True
+    
+class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = ['map_location', 'phone_number', 'email', "shortlist", "expire", "five_job_alerts", "profile_saved", "rejection", "profile_privacy", "resume_privacy"]
+        extra_kwargs = {
+            'map_location': {'required': False},
+            'phone_number': {'required': False},
+            'email': {'required': False},
+            "shortlist": {'required': False},
+            "expire": {'required': False},
+            "five_job_alerts": {'required': False},
+            "profile_saved": {'required': False},
+            "rejection": {'required': False},
+            "profile_privacy": {'required': False},
+            "resume_privacy": {'required': False},
+        }
+        
+    def change_settings(self, instance, data):
+        instance.map_location = data.get('map_location', instance.map_location)
+        instance.phone_number = data.get('phone_number', instance.phone_number)
+        instance.email = data.get('email', instance.email)
+        instance.shortlist = data.get('shortlist', instance.shortlist)
+        instance.expire = data.get('expire', instance.expire)
+        instance.five_job_alerts = data.get('five_job_alerts', instance.five_job_alerts)
+        instance.profile_saved = data.get('profile_saved', instance.profile_saved)
+        instance.rejection = data.get('rejection', instance.rejection)
+        instance.profile_privaсy = data.get('profile_privacy', instance.profile_privacy)
+        instance.resume_privacy = data.get('resume_privacy', instance.resume_privacy)
+        
+        instance.save()
+        return instance
+    
+class GetUserSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    
+    def find_user(self, data):
+        token = Token.objects.get(key=data['token'])
+        return token.user
+        

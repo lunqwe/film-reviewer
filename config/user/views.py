@@ -426,7 +426,82 @@ class DeleteCandidateSocialView(generics.CreateAPIView):
         
         return Response({'status': 'success', 'detail': "Deleted successfully!"})
     
+class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
+    serializer_class = ChangeCandidateAccountSettingsSerializer
     
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = CustomUser.objects.get(id=request.data['user_id'])
+        candidate = Candidate.objects.get(user=user)
+        change_settings = serializer.change_settings(candidate, request.data)
+        
+        if not change_settings:
+            return Response({'status': 'error', 'detail': 'Failed to change candidate settings'})
+        
+        return Response({'status':'success', 'detail': "Candidate settings changed successfully!"})
+
+
+class GetUserView(generics.CreateAPIView):
+    serializer_class = GetUserSerializer
+    
+    def get(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.find_user(request.data)
+        if user:
+            user_data = {
+                    'full_name': user.full_name,
+                    'email': user.email,
+                    'status': user.status,
+                    'verified_email': user.verified_email
+                }
+            if user.status == 'employer':
+                employer = Employer.objects.get(user=user)
+                employer_data = {
+                    'user_id': user.id,
+                    #'logo': employer.logo
+                    # banner = models.ImageField(upload_to='media/banners', blank=True, null=True)
+                    "company_name": employer.company_name,
+                    "about": employer.about,
+                    "organization_type": employer.organization_type,
+                    "industry_types": employer.industry_types,
+                    "team_size": employer.team_size,
+                    "website": employer.website,
+                    "year_of_establishment": employer.year_of_establishment,
+                    "company_vision": employer.company_vision,
+                    "map_location": employer.map_location,
+                    "phone_number": employer.phone_number,
+                    "email": employer.email
+                }
+                
+                return Response({'status': 'success', "user_data": user_data, "employer_data": employer_data})
+            elif user.status == 'candidate':
+                candidate = Candidate.objects.get(user=user)
+                candidate_data = {
+                    "full_name": candidate.full_name,
+                    "headline": candidate.headline,
+                    "experiences": candidate.experiences,
+                    "educations": candidate.educations,
+                    "website": candidate.website,
+                    "nationality": candidate.nationality,
+                    "date_of_birth": candidate.date_of_birth,
+                    "gender": candidate.gender,
+                    'marital_status': candidate.marital_status,
+                    "biography": candidate.biography,
+                    "map_location": candidate.map_location,
+                    "phone_number": candidate.phone_number,
+                    "shortlist": candidate.shortlist,
+                    "expire": candidate.expire,
+                    "five_job_alerts": candidate.five_job_alerts,
+                    "profile_saved": candidate.profile_saved,
+                    "rejection": candidate.rejection,
+                    "profile_privacy": candidate.profile_privacy,
+                    "resume_privacy": candidate.resume_privacy,
+                }
+                return Response({'status': 'success'}, user_data, candidate_data)
+        else:
+            return Response({'status': 'error', 'detail': "User not found."})
     
     
     

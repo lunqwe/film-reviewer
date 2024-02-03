@@ -21,9 +21,11 @@ urlpatterns = [
     path('change-candidate-profile/', ChangeCandidateProfileView.as_view(), name='change-candidate-profile'),
     path('add-candidate-link/', CreateCandidateSocialView.as_view(), name='add-candidate-link'),
     path('delete-candidate-link/', DeleteCandidateSocialView.as_view(), name='delete-candidate-link'),
+    path('change-candidate-account-settings', ChangeCandidateAccountSettingsView.as_view(), name='change-candidate-account-settings'),
     path('create-resume/', CreateResumeView.as_view(), name='create-resume'), 
     path('change-resume/', ChangeResumeView.as_view(), name='change-resume'),
     path('delete-resume/', DeleteResumeView.as_view(), name='delete-resume'),
+    path('get-user/', GetUserView.as_view(), name='get_user')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
