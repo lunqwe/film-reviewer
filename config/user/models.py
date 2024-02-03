@@ -44,19 +44,19 @@ class Employer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     logo = models.ImageField(upload_to='media/logo', blank=True, null=True)
     banner = models.ImageField(upload_to='media/banners', blank=True, null=True)
-    company_name = models.CharField(max_length=255, default="0")
-    about = models.TextField(blank=True, null=True, default='0')
+    company_name = models.CharField(max_length=255, default="")
+    about = models.TextField(blank=True, null=True, default='')
     
-    organization_type = models.CharField(max_length=255, default='0')
-    industry_types = models.CharField(max_length=255, default='0')
-    team_size = models.CharField(max_length=255, default='0')
-    website = models.CharField(null=True, blank=True, default='0')
-    year_of_establishment = models.DateField(blank=True, null=True)
-    company_vision = models.TextField(blank=True, null=True, default='0')
+    organization_type = models.CharField(max_length=255, default='')
+    industry_types = models.CharField(max_length=255, default='')
+    team_size = models.CharField(max_length=255, default='')
+    website = models.CharField(null=True, blank=True, default='')
+    year_of_establishment = models.DateField(default='', blank=True, null=True)
+    company_vision = models.TextField(blank=True, null=True, default='')
     
-    map_location = models.CharField(max_length=255, blank=True, null=True, default='0')
-    phone_number = models.CharField(max_length=30, default='0')
-    email = models.EmailField(blank=True, null=True)
+    map_location = models.CharField(max_length=255, blank=True, null=True, default='')
+    phone_number = models.CharField(max_length=30, default='')
+    email = models.EmailField(blank=True, null=True, default='')
     def __str__(self):
         return f'{self.company_name}({self.user.username})'
 
