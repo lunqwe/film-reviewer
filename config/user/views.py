@@ -504,5 +504,17 @@ class GetUserView(generics.CreateAPIView):
             return Response({'status': 'error', 'detail': "User not found."})
     
     
+class DeleteUserView(generics.CreateAPIView):
+    serializer_class = DeleteUserSerializer
     
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        delete_user = serializer.delete_user(request.data)
+        
+        if not delete_user:
+            return Response({'status': 'error', 'detail': "Error deleting user"})
+        
+        return Response({"status": 'success', 'detail': "User deleted successfully!"})
+        
             

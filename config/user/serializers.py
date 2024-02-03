@@ -418,3 +418,13 @@ class GetUserSerializer(serializers.Serializer):
         token = Token.objects.get(key=data['token'])
         return token.user
         
+        
+class DeleteUserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    
+    def delete_user(self, data):
+        user = CustomUser.objects.get(username=data['username'])
+        if user:
+            user.delete()
+            return True
+        
