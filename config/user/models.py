@@ -51,7 +51,7 @@ class Employer(models.Model):
     industry_types = models.CharField(max_length=255, default='')
     team_size = models.CharField(max_length=255, default='')
     website = models.CharField(null=True, blank=True, default='')
-    year_of_establishment = models.DateField(default='', blank=True, null=True)
+    year_of_establishment = models.CharField(max_length=255, default='', blank=True, null=True)
     company_vision = models.TextField(blank=True, null=True, default='')
     
     map_location = models.CharField(max_length=255, blank=True, null=True, default='')
