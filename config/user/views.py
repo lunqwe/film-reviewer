@@ -445,10 +445,10 @@ class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
 class GetUserView(generics.CreateAPIView):
     serializer_class = GetUserSerializer
     
-    def get(self, request):
+    def get(self, request, token):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.find_user(request.data)
+        user = serializer.find_user(token)
         if user:
             user_data = {
                     'full_name': user.full_name,
@@ -475,7 +475,7 @@ class GetUserView(generics.CreateAPIView):
                     "email": employer.email
                 }
                 
-                return Response({'status': 'success', "user_data": user_data, "employer_data": employer_data})
+                return Response({'status': 'success', 'user': {"user_data": user_data, "employer_data": employer_data}})
             elif user.status == 'candidate':
                 candidate = Candidate.objects.get(user=user)
                 candidate_data = {

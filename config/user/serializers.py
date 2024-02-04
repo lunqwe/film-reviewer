@@ -412,10 +412,9 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
         return instance
     
 class GetUserSerializer(serializers.Serializer):
-    token = serializers.CharField()
     
-    def find_user(self, data):
-        token = Token.objects.get(key=data['token'])
+    def find_user(self, token_key):
+        token = Token.objects.get(key=token_key)
         return token.user
         
         

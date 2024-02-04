@@ -25,7 +25,7 @@ urlpatterns = [
     path('create-resume/', CreateResumeView.as_view(), name='create-resume'), 
     path('change-resume/', ChangeResumeView.as_view(), name='change-resume'),
     path('delete-resume/', DeleteResumeView.as_view(), name='delete-resume'),
-    path('get-user/', GetUserView.as_view(), name='get_user'),
+    path('get-user/<token>', GetUserView.as_view(), name='get_user'),
     path('delete-user/', DeleteUserView.as_view(), name='delete-user')
 ]
 
