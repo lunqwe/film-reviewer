@@ -166,6 +166,7 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
             'company_vision': {'required': False},
             'map_location': {'required': False},
             'phone_number': {'required': False},
+            'social_links': {'required': False},
             
         }
 
@@ -182,6 +183,14 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
         instance.company_vision = validated_data.get('company_vision', instance.company_vision)
         instance.map_location = validated_data.get('map_location', instance.map_location)
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        social_links = validated_data.get('social_links')
+        for link in social_links:
+            EmployerSocialLink.objects.create(
+                employer = instance,
+                social_network=link['social_media'],
+                link=link['link'],
+                frontend_id=link['id']
+            )
         
         instance.save()
         return instance
@@ -427,3 +436,5 @@ class DeleteUserSerializer(serializers.Serializer):
             user.delete()
             return True
         
+        
+

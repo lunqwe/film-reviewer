@@ -64,6 +64,7 @@ class EmployerSocialLink(models.Model):
     employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
     social_network = models.CharField(max_length=255, blank=True, null=True)
     link = models.URLField(blank=True, null=True)
+    frontend_id = models.CharField(blank=True, null=True)
     
     
 
