@@ -460,8 +460,8 @@ class GetUserView(generics.CreateAPIView):
                 employer = Employer.objects.get(user=user)
                 employer_data = {
                     'user_id': user.id,
-                    #'logo': employer.logo
-                    # banner = models.ImageField(upload_to='media/banners', blank=True, null=True)
+                    'logo': employer.logo.url,
+                    "banner": employer.banner.url,
                     "company_name": employer.company_name,
                     "about": employer.about,
                     "organization_type": employer.organization_type,
