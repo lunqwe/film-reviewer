@@ -24,7 +24,7 @@ config = AutoConfig()
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -53,7 +53,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = ["https://7585-91-193-167-185.ngrok-free.app"]
+
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -80,7 +80,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 AUTHENTICATION_BACKENDS = [
     'user.backends.EmailBackend',
-    'django.contrib.auth.backends.ModelBackend',  # Должен быть включен
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -154,18 +154,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.ukr.net'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'jobpilot@ukr.net'  # Замените на свой Gmail-адрес
-# EMAIL_HOST_PASSWORD = 'A3wMBn5m6sYghCr9' 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_BACKEND = config("EMAIL_BACKEND")
+EMAIL_HOST = config("EMAIL_HOST")
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_PORT = 587 
+EMAIL_PORT = config('EMAIL_PORT')
 
 
 # Static files (CSS, JavaScript, Images)
