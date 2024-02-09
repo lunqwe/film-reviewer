@@ -9,6 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink, CandidateSocialLink
+from .services import get_user
 
 User = get_user_model()
 
@@ -56,7 +57,7 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         # Проверяем существование пользователя с данным email
-        user = CustomUser.objects.filter(email=email).first()
+        user = get_user(email=email)
 
         if user:
             # Проверяем валидность пароля
@@ -75,7 +76,7 @@ class SendVerificationSerializer(serializers.Serializer):
     user_id = serializers.CharField()
     
     def create(self, data):
-        user = CustomUser.objects.filter(id=data['user_id'])[0]
+        user = get_user(id=data['user_id'])
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
@@ -439,9 +440,11 @@ class DeleteUserSerializer(serializers.Serializer):
         
 class TestImageSerializer(serializers.Serializer):
     image = serializers.ImageField()
+    user_file = serializers.FileField()
     
     def check(self, data):
         image = data['image']
+        user_file = data['file_field']
         if image:
             print(image)
             return image

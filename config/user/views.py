@@ -525,9 +525,9 @@ class TestImageView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        check_img = serializer.check(request.data)
+        check_valid = serializer.check(request.data)
         
-        if not check_img:
+        if not check_valid:
             return Response({"status": 'proebali'})
         
         return Response({'status': 'vse zaebok'})
