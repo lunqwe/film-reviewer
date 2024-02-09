@@ -517,4 +517,18 @@ class DeleteUserView(generics.CreateAPIView):
         
         return Response({"status": 'success', 'detail': "User deleted successfully!"})
         
-            
+
+class TestImageView(generics.CreateAPIView):
+    serializer_class = TestImageSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        check_img = serializer.check(request.data)
+        
+        if not check_img:
+            return Response({"status": 'proebali'})
+        
+        return Response({'status': 'vse zaebok'})
+        

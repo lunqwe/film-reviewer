@@ -437,4 +437,11 @@ class DeleteUserSerializer(serializers.Serializer):
             return True
         
         
-
+class TestImageSerializer(serializers.Serializer):
+    image = serializers.ImageField()
+    
+    def check(self, data):
+        image = data['image']
+        if image:
+            print(image)
+            return image
