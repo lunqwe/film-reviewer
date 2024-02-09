@@ -26,6 +26,8 @@ def send_email(user_email, subject, email_content):
 
         response = sg.send(message)
         print(response)
+        return response
     except Exception as e:
         print("Error while sending email")
         print(e)
+        return False

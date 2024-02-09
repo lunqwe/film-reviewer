@@ -15,7 +15,7 @@ import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 from .serializers import *
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile, EmployerSocialLink
-
+from .services import get_user, send_email
 
 
 User = get_user_model()
@@ -109,19 +109,12 @@ class VerifyEmailView(generics.CreateAPIView):
                 print(generated_code)
                 verificator.code = str(generated_code)
                 verificator.save()
-                sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
-                message = Mail(
-                    from_email=From('jobpilot@ukr.net', 'Jobpilot'),
-                    to_emails=To(user.email),
-                    subject='Jobpilot email verification',
-                    plain_text_content=str(generated_code)
-                )
-
-                response = sg.send(message)
-                print(response)
                 
-             
-                return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
+                mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
+                if mail:
+                    return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'status': 'error', 'detail': "Failed to send email"})
             else:
                 return Response({'status': 'error', 'detail': 'User is already verified or server stopped connection to smtp server.'}, status=status.HTTP_400_BAD_REQUEST)
         else:

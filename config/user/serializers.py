@@ -444,7 +444,7 @@ class TestImageSerializer(serializers.Serializer):
     
     def check(self, data):
         image = data['image']
-        user_file = data['file_field']
+        user_file = data['user_file']
         if image:
             print(image)
             return image
