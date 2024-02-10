@@ -70,3 +70,12 @@ def change_data(instance, fields_to_update, validated_data):
         setattr(instance, field, validated_data.get(field, getattr(instance, field)))
     instance.save()
     return instance
+
+def create_user(validated_data):
+    password = validated_data.pop('password2')        
+    
+    user = create_object(CustomUser, **validated_data)
+    user.set_password(password)
+    user.save()
+    
+    return user

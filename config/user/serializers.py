@@ -9,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink, CandidateSocialLink
-from .services import get_object, change_data
+from .services import get_object, change_data, create_user, create_object
 
 User = get_user_model()
 
@@ -25,7 +25,6 @@ class UserSerializer(serializers.ModelSerializer):
         password = data.get('password')
         password2 = data.get('password2')
 
-        # Проверяем, совпадают ли пароли
         if password != password2:
             raise serializers.ValidationError("Passwords do not match.")
         else:
@@ -34,18 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Используем только первый введенный пароль
-        print(validated_data)
-        password = validated_data.pop('password2')
-        print(validated_data)
-        
-        user = User.objects.create(**validated_data)
-
-        user.set_password(password)
-        user.save()
-
-        print(user)
-        return user
+        return create_user(validated_data)
         
 
 class LoginSerializer(serializers.Serializer):
@@ -148,8 +136,6 @@ class ChangePasswordSerializer(serializers.Serializer):
         
         
 class SaveEmployerSerializer(serializers.ModelSerializer):
-
-    
     class Meta:
         model = Employer
         fields = ['user_id', 'logo', 'banner', 'company_name', 'about',
@@ -183,15 +169,14 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
         changed_instance = change_data(instance, fields_to_update, validated_data)
         social_links = validated_data.get('social_links')
         if social_links:
-            EmployerSocialLink.objects.filter(employer=changed_instance).delete()  # Удаляем все предыдущие связи
-
             for link in social_links:
-                EmployerSocialLink.objects.create(
-                    employer=instance,
-                    social_network=link['social_media'],
-                    link=link['link'],
-                    frontend_id=link['id']
-                )
+                link_data = {
+                    'employer': instance,
+                    "social_network": link['social_media'],
+                    "link": link['link'],
+                    "frontend_id": link['id']
+                }
+                create_object(EmployerSocialLink, link_data)
 
         return changed_instance
     
@@ -211,7 +196,7 @@ class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
         
     
     def update(self, instance, validated_data):
-        fields_to_update = ['user_id', 'logo', 'banner', 'company_name', 'about']
+        fields_to_update = ['logo', 'banner', 'company_name', 'about']
         changed_instance = change_data(instance, fields_to_update, validated_data)
 
         return changed_instance
@@ -221,7 +206,7 @@ class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Employer
-        fields = ['user_id', 'organization_type', 'industry_types', 'team_size', 'year_of_establishment', 'website', 'company_vision']
+        fields = ['organization_type', 'industry_types', 'team_size', 'year_of_establishment', 'website', 'company_vision']
         
         extra_kwargs = {
             'organization_type': {'required': False},
@@ -243,12 +228,10 @@ class CreateEmployerSocialSerializer(serializers.ModelSerializer):
         model = EmployerSocialLink
         fields = ['social_network', 'link']
         
-    def create(self, instance, data):
-        instance.social_network = data.get('social_network', instance.social_network)
-        instance.link = data.get('link', instance.link)
-        
-        instance.save()
-        return instance
+    def create(self, instance, validated_data):
+        fields_to_update = ['social_network', 'link']
+        changed_instance = change_data(instance, fields_to_update, validated_data)
+        return changed_instance
     
 class ChangeEmployerContactSerializer(serializers.ModelSerializer):
     class Meta:
@@ -261,12 +244,9 @@ class ChangeEmployerContactSerializer(serializers.ModelSerializer):
         }
         
     def change(self, instance, data):
-        instance.map_location = data.get('map_location', instance.map_location)
-        instance.phone_number = data.get('phone_number', instance.phone_number)
-        instance.email = data.get('email', instance.email)
-        
-        instance.save()
-        return instance
+        fields_to_update = ['map_location', 'phone_number', 'email']
+        changed_instance = change_data(instance, fields_to_update, data)
+        return changed_instance
         
 
 
@@ -274,9 +254,9 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Candidate
-        fields = ['user_id', 'profile_picture', 'full_name', 'headline', 'educations', 'website']
+        fields = ['profile_picture', 'full_name', 'headline', 'educations', 'website']
         extra_kwargs = {
-            'user_id': {'required': False},
+            'user_id': {'required': True},
             'profile_picture': {'required': False},
             'full_name': {'required': False},
             'headline': {'required': False},
@@ -285,13 +265,8 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        instance.profile_picture = validated_data.get('profile_picture', instance.profile_picture)
-        instance.full_name = validated_data.get('full_name', instance.full_name)
-        instance.headline = validated_data.get('headline', instance.headline)
-        instance.educations = validated_data.get('educations', instance.educations)
-        instance.website = validated_data.get('website', instance.website)
-        instance.save()
-        return instance
+        fields_to_update = ['profile_picture', 'full_name', 'headline', 'educations', 'website']
+        return change_data(instance, fields_to_update, validated_data)
             
         
 class CreateResumeSerializer(serializers.ModelSerializer):
@@ -299,13 +274,12 @@ class CreateResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
         fields = ['title', 'file']
+        extra_kwargs = {
+            'user_id': {'required': True},
+        }
         
     def create(self, instance, data):
-        instance.title = data.get('title', instance.title)
-        instance.file = data.get('file', instance.file)
-        
-        instance.save()
-        return instance
+        return create_object(instance, data)
     
     
 
@@ -313,13 +287,13 @@ class ChangeResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
         fields = ['title', 'file']
+        extra_kwargs = {
+            'user_id': {'required': True},
+        }
     
-    def change(self, instance, data):
-        instance.title = data.get('title', instance.title)
-        instance.file = data.get('file', instance.file)
-        
-        instance.save()
-        return instance
+    def change(self, instance, validated_data):
+        fields_to_update = ['title', 'file']
+        return change_data(instance, fields_to_update, validated_data)
         
         
 class DeleteResumeSerializer(serializers.ModelSerializer):
@@ -339,6 +313,7 @@ class ChangeCandidateProfileSerializer(serializers.ModelSerializer):
         fields = ['nationality', 'date_of_birth', 'gender', 'marital_status', 'biography']
         
         extra_kwargs = {
+            'user_id': {'required': True},
             'nationality': {'required': False},
             'date_of_birth': {'required': False},
             'gender': {'required': False},
@@ -347,27 +322,20 @@ class ChangeCandidateProfileSerializer(serializers.ModelSerializer):
         }
         
     def change_profile(self, candidate, data):
-        candidate.nationality = data.get('nationality', candidate.nationality)
-        candidate.date_of_birth = data.get('date_of_birth', candidate.date_of_birth)
-        candidate.gender = data.get('gender', candidate.gender)
-        candidate.marital_status = data.get('marital_status', candidate.marital_status)
-        candidate.biography = data.get('biography', candidate.biography)
-        
-        candidate.save()
-        return candidate
+        fields_to_update = ['nationality', 'date_of_birth', 'gender', 'marital_status', 'biography']
+        return change_data(candidate, fields_to_update, data)
     
     
 class CreateCandidateSocialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CandidateSocialLink
         fields = ['social_network', 'link']
+        extra_kwargs = {
+            'user_id': {'required': True},
+        }
         
     def create_link(self, instance, data):
-        instance.social_network = data.get('social_network', instance.social_network)
-        instance.link = data.get('link', instance.link)
-        
-        instance.save()
-        return instance
+        return create_object(instance, data)
     
 class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
     class Meta:
@@ -383,6 +351,7 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
         model = Candidate
         fields = ['map_location', 'phone_number', 'email', "shortlist", "expire", "five_job_alerts", "profile_saved", "rejection", "profile_privacy", "resume_privacy"]
         extra_kwargs = {
+            'user_id': {'required': True},
             'map_location': {'required': False},
             'phone_number': {'required': False},
             'email': {'required': False},
@@ -396,19 +365,8 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
         }
         
     def change_settings(self, instance, data):
-        instance.map_location = data.get('map_location', instance.map_location)
-        instance.phone_number = data.get('phone_number', instance.phone_number)
-        instance.email = data.get('email', instance.email)
-        instance.shortlist = data.get('shortlist', instance.shortlist)
-        instance.expire = data.get('expire', instance.expire)
-        instance.five_job_alerts = data.get('five_job_alerts', instance.five_job_alerts)
-        instance.profile_saved = data.get('profile_saved', instance.profile_saved)
-        instance.rejection = data.get('rejection', instance.rejection)
-        instance.profile_privaсy = data.get('profile_privacy', instance.profile_privacy)
-        instance.resume_privacy = data.get('resume_privacy', instance.resume_privacy)
-        
-        instance.save()
-        return instance
+        fields_to_update = ['map_location', 'phone_number', 'email', "shortlist", "expire", "five_job_alerts", "profile_saved", "rejection", "profile_privacy", "resume_privacy"]
+        return change_data(instance, fields_to_update, data)
     
 class GetUserSerializer(serializers.Serializer):
     
@@ -421,19 +379,19 @@ class DeleteUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     
     def delete_user(self, data):
-        user = CustomUser.objects.get(username=data['username'])
+        user = get_object(CustomUser, username=data['username'])
         if user:
             user.delete()
             return True
         
         
-class TestImageSerializer(serializers.Serializer):
-    image = serializers.ImageField()
-    user_file = serializers.FileField()
+# class TestImageSerializer(serializers.Serializer):
+#     image = serializers.ImageField()
+#     user_file = serializers.FileField()
     
-    def check(self, data):
-        image = data['image']
-        user_file = data['user_file']
-        if image:
-            print(image)
-            return image
+#     def check(self, data):
+#         image = data['image']
+#         user_file = data['user_file']
+#         if image:
+#             print(image)
+#             return image
