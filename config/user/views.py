@@ -6,8 +6,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_decode
+from django.forms.models import model_to_dict
 from rest_framework.authtoken.models import Token
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 from decouple import AutoConfig
 import os
 import random
@@ -15,7 +17,8 @@ import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 from .serializers import *
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile, EmployerSocialLink
-from .services import get_user, send_email
+from .services import get_object, send_email, create_object, get_response, error_detail
+
 
 
 User = get_user_model()
@@ -32,25 +35,25 @@ class CreateUserView(generics.CreateAPIView):
             password = serializer.validated_data.pop('password')
             user_type = request.data['status']
 
-            user = CustomUser.objects.create(**serializer.validated_data)
+            user = create_object(CustomUser, **serializer.validated_data)
             print(user)
             user.set_password(password)
             user.save()
             
             if user_type:
                 if user_type == 'candidate':
-                    candidate = Candidate.objects.create(user=user)
+                    candidate = create_object(Candidate, user=user)
                 
                 elif user_type == 'employer':
-                    employer = Employer.objects.create(user=user)
+                    employer = create_object(Employer, user=user)
                     
                 else:
-                    return Response({'status': 'error', 'detail': 'Wrong user status.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return get_response('error', "Wrong user status.", status=status.HTTP_400_BAD_REQUEST)
                     
             else:
-                return Response({'status': 'error', 'detail': 'User status specification required.'}, status=status.HTTP_400_BAD_REQUEST)
+                return get_response('error', 'User status specification required.', status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({'status': "success",  'detail': 'User created successfully!', 'id': user.id}, status=status.HTTP_201_CREATED)
+            return get_response('success', "User created successfully!", {'id': user.id}, status=status.HTTP_201_CREATED)
         
         except serializers.ValidationError as e:
             errors = e.detail
@@ -86,86 +89,93 @@ class LoginView(generics.CreateAPIView):
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
         except serializers.ValidationError as e:
-            # Обработка ошибок валидации
-            errors = e.detail
-            error_detail = errors.get('non_field_errors', [])[0] if errors.get('non_field_errors') else None
-            print(error_detail)
-            return Response({'status': 'error', 'detail': error_detail}, status=status.HTTP_400_BAD_REQUEST)
+            return error_detail(e)
+        
             
 class VerifyEmailView(generics.CreateAPIView):
     serializer_class = SendVerificationSerializer
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        user = serializer.create(request.data)
-        check_verified = user.verified_email
-        
-        print(request.data)
-        
-        if user:
-            if not check_verified:
-                generated_code = random.randint(100000,1000000)
-                verificator = Verificator.objects.create(user=user)
-                print(generated_code)
-                verificator.code = str(generated_code)
-                verificator.save()
-                
-                mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
-                if mail:
-                    return Response({'status': 'success', 'detail': 'Verification message sent!'}, status=status.HTTP_201_CREATED)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.create(request.data)
+            check_verified = user.verified_email
+            
+            if user:
+                if not check_verified:
+                    generated_code = random.randint(100000,1000000)
+                    verificator = create_object(Verificator, user=user)
+                    print(generated_code)
+                    verificator.code = str(generated_code)
+                    verificator.save()
+                    
+                    mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
+                    if mail:
+                        return get_response('success', 'Verification message sent!', status=status.HTTP_201_CREATED)
+                    else:
+                        return get_response('error', 'Failed to send email.', status=status.HTTP_408_REQUEST_TIMEOUT)
                 else:
-                    return Response({'status': 'error', 'detail': "Failed to send email"})
+                    return get_response('error', "User is already verified.", status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status': 'error', 'detail': 'User is already verified or server stopped connection to smtp server.'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'status': 'error', 'detail': 'Failed to get user email.'}, status=status.HTTP_400_BAD_REQUEST)
+                return get_response('error', 'Failed to get user email.', status=status.HTTP_400_BAD_REQUEST)
+            
+        except serializers.ValidationError as e:
+            return error_detail(e)
+        
 
 class CheckVerificationView(generics.CreateAPIView):
     serializer_class = CheckVerificationSerializer
     
     def create(self,request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        check_verification = serializer.validate(request.data)
-        user = CustomUser.objects.filter(id=request.data['user_id'])[0]
-        
-        if user.verified_email:
-            return Response({'status': 'error', 'detail': 'User email is already verified.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            serializer.is_valid(raise_exception=True)
+            check_verification = serializer.validate(request.data)
+            
+            if check_verification == 'already_verified':
+                return get_response('error', 'User email is already verified.', status=status.HTTP_400_BAD_REQUEST)
 
-        if check_verification == 'expired':
-            return Response({'status':'error', 'detail': 'Verification code expired.'}, status=status.HTTP_408_REQUEST_TIMEOUT)
+            if check_verification == 'expired':
+                return get_response('error', 'Verification code expired.', status=status.HTTP_408_REQUEST_TIMEOUT)
+            
+            elif check_verification == 'wrong_code':
+                return get_response('error', "Verificator never existed.", status=status.HTTP_401_UNAUTHORIZED)
+            
+            elif check_verification == 'success':
+                return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
+            
+            else:
+                return get_response('error', 'Verificator never existed.', status=status.HTTP_400_BAD_REQUEST)
+            
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        elif check_verification == 'wrong_code':
-            return Response({'status': 'error', 'detail': "Verificator never existed."}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        elif check_verification == 'success':
-            return Response({'status': 'success', 'detail': 'Verificated successfully!'}, status=status.HTTP_201_CREATED)
-        
-        else:
-            return Response({'status': 'error', 'detail': 'Verificator never existed.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            
 class SendResetPassView(generics.CreateAPIView):
     serializer_class = ResetPasswordRequestSerializer
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        user_data = serializer.validate(request.data)
+        try:
+            user_data = serializer.validate(request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            reset_link = f'http://localhost:3000/reset-password/{user_data[0]}/{user_data[1]}'
+            if user_data:
+                mail = send_email(user_email=user_data[2], subject='Jobpilot reset password request', email_content=reset_link)
+                if mail:
+                    
+                    return get_response('success', 'Password reset link sent.', {'user_id': user_data[0], 'token': user_data[1]}, status=status.HTTP_201_OK)
+                else:
+                    
+                    return get_response('error', "Error sending email.")
+            else:
+                return get_response('error', 'Error creating password reset link: user not found.')
+            
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        reset_link = f'http://localhost:3000/reset-password/{user_data[0]}/{user_data[1]}'
-        if user_data:
-            sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
-            message = Mail(
-                    from_email=From('jobpilot@ukr.net', 'Jobpilot'),
-                    to_emails=To(user_data[2]),
-                    subject='Jobpilot reset password request',
-                    plain_text_content=reset_link
-                )
-
-            response = sg.send(message)
-            print(response)
-                
-            return Response({'status':'success', 'detail': 'Password reset link sent.', 'user_id': user_data[0], 'token': user_data[1]})
-        else:
-            return Response({'status': 'error', 'detail': 'Error creating password reset link: user not found.'})
         
         
 class ResetPasswordView(generics.CreateAPIView):
@@ -173,53 +183,58 @@ class ResetPasswordView(generics.CreateAPIView):
     
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)  # Проверяем валидность данных
-        uidb64 = request.data['uid_64']
-        token_key = request.data['token']
-        # Получаем данные из запроса
-        password = serializer.create(request.data)
-        user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
         try:
-            # Получаем пользователя по идентификатору
-            user = CustomUser.objects.get(id=user_id)
-        except:
-            return Response({'status': 'error', 'detail': 'User not found.'}, status=400)
+            serializer.is_valid(raise_exception=True)
+            uidb64 = request.data['uid_64']
+            token_key = request.data['token']
 
-        try:
-            token_obj = Token.objects.get(key=token_key)
-        except:
-            return Response({'status': 'error', 'detail': 'Token not found.'}, status=400)
+            password = serializer.validate(request.data)
+            user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
+            try:
+                user = get_object(CustomUser, id=user_id)
+            except:
+                return get_response('error', 'User not found.', status=status.HTTP_401_UNAUTHORIZED)
+            try:
+                token_obj = get_object(Token, key=token_key)
+            except:
+                return get_response('error', 'Token not found.', status=status.HTTP_404_NOT_FOUND)
+            
+            if password:
+                print(password)
+                user.set_password(password)
+                user.save()
+                token_obj.delete()
+            else:
+                return get_response('error', "Passwords do not match.")
+                
+            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'})
         
-        if password:
-            
-            print(password)
-            user.set_password(password)
-            user.save()
-
-                # Удаляем токен пользователя
-            token_obj.delete()
-        else:
-            return Response({'status': 'error', 'detail': "Passwords do not match."})
-            
-        return Response({'status': 'success', 'detail': 'Password changed successfully!', 'note': 'You must relogin'})
+        except serializers.ValidationError as e:
+            return error_detail(e)
+        
     
 class ChangePasswordView(generics.CreateAPIView):
     serializer_class = ChangePasswordSerializer
     
     def create(self, request):
         serializer = self.get_serializer()
-        current_password = request.data['current_password']
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        
-        if user.check_password(current_password):
-            change_password = serializer.change(user, request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            current_password = request.data['current_password']
+            user = get_object(CustomUser, id=request.data['user_id'])
+            
+            if user.check_password(current_password):
+                change_password = serializer.change(user, request.data)
 
-            if change_password:
-                return Response({'status':'success', 'detail': "Password changed successfully!"})       
+                if change_password:
+                    return get_response('success', "Password changed successfully!")       
+                else:
+                    return get_response('error', "new_password1 & new_password2 didnt match.")
             else:
-                return Response({'status': 'error', 'detail': "new_password1 & new_password2 didnt match."})
-        else:
-            return Response({'status':'error', 'detail': "Wrong current password."}) 
+                return get_response('error', "Wrong current password.") 
+            
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
 
 class SaveEmployerView(generics.CreateAPIView):
@@ -227,32 +242,41 @@ class SaveEmployerView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = CustomUser.objects.get(id=request.data['user_id'])
+            employer = Employer.objects.create(user=user)
+            employer_created = serializer.update(employer, request.data)
+            
+            if not employer_created:
+                return get_response('error', "Error creating employer.")
+            
+            return get_response("success", "Employer created successfully!")
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        employer = Employer.objects.create(user=user)
-        employer_created = serializer.update(employer, request.data)
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        if not employer_created:
-            return Response({"status": 'error', 'detail': "Error creating employer."})
-        
-        return Response({'status': "success", "detail": "Employer created successfully!"})
     
 class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
     serializer_class = ChangeEmployerCompanyInfoSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            employer = get_object(Employer, user=user)
+            employer_changed = serializer.update(employer, request.data)
+            
+            if not employer_changed:
+                return get_response('error', 'Error changing employer data.')
+            
+            return get_response("success", 'Employer company info changed successfully!')
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        employer = Employer.objects.get(user=user)
-        employer_changed = serializer.update(employer, request.data)
-        
-        if not employer_changed:
-            return Response({'status': 'error', 'detail': 'Error changing employer data.'})
-        
-        return Response({'status': "success", 'detail': 'Employer company info changed successfully!'})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
     
 class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
@@ -260,32 +284,40 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            employer = get_object(Employer, user=user)
+            employer_changed = serializer.change_founding(employer, request.data)
+            
+            if not employer_changed:
+                return get_response('error', 'Failed to change employer`s founding info.')
+            
+            return get_response("success", "Employer founding info changed successfully!")
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        employer = Employer.objects.get(user=user)
-        employer_changed = serializer.change_founding(employer, request.data)
-        
-        if not employer_changed:
-            return Response({"status": 'error', 'detail': 'Failed to change employer`s founding info.'})
-        
-        return Response({'status':"success", 'detail': "Employer founding info changed successfully!"})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 class CreateEmployerSocialView(generics.CreateAPIView):
     serializer_class = CreateEmployerSocialSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = get_object(CustomUser, id=request.data['user_id'])
+            employer = get_object(Employer, user=user)
+            employer_link = create_object(EmployerSocialLink, employer=employer)
+            link_created = serializer.create(employer_link, request.data)
+            
+            if not link_created:
+                return get_response('error', 'Error creating link model')
+            
+            return get_response('success', "Link added successfully!")
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        employer = Employer.objects.get(user=user)
-        employer_link = EmployerSocialLink.objects.create(employer=employer)
-        link_created = serializer.create(employer_link, request.data)
-        
-        if not link_created:
-            return Response({'status': 'error', 'detail': 'Error creating link model'})
-        
-        return Response({'status': 'success', 'detail': "Link added successfully!"})        
+        except serializers.ValidationError as e:
+            return error_detail(e)
 
 
 class ChangeEmployerContactView(generics.CreateAPIView):
@@ -293,15 +325,20 @@ class ChangeEmployerContactView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        employer = Employer.objects.get(user=user)
-        employer_changed = serializer.change(employer, request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = get_object(CustomUser, id=request.data['user_id'])
+            employer = get_object(Employer, user=user)
+            employer_changed = serializer.change(employer, request.data)
+            
+            if not employer_changed:
+                return get_response('error', 'Error changing employer contacts')
+            
+            return get_response('success', "Employer contacts changed successfully!")
         
-        if not employer_changed:
-            return Response({'status': 'error', 'detail': 'Error changing employer contacts'})
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        return Response({'status': 'success', 'detail': "Employer contacts changed successfully!"})
-    
         
 
 class ChangeCandidatePersonalView(generics.CreateAPIView):
@@ -309,51 +346,62 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate_obj = get_object(Candidate, user=user)
+            candidate = serializer.update(candidate_obj, request.data)
+            
+            if not candidate:
+                return get_response('error', "Error updating candidate.")
+            
+            return get_response("success", "Candidate info changed successfully!")
         
-        user_id = request.data['user_id']
-        user = CustomUser.objects.get(id=user_id)
-        candidate_obj = Candidate.objects.get(user=user)
-        candidate = serializer.update(candidate_obj, request.data)
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        if not candidate:
-            return Response({'status':'error', 'detail': "Error updating candidate."})
-        
-        return Response({'status': "success", 'detail': "Candidate info changed successfully!"})
-    
         
 class CreateResumeView(generics.CreateAPIView):
     serializer_class = CreateResumeSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            resume = create_object(ResumeFile, candidate=candidate)
+            resume_created = serializer.create(resume, request.data)
+            
+            if not resume_created:
+                return get_response('error', "Error creating resume")
+            
+            return get_response("success", "Resume created successfully!", {'resume_id': resume.id})
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        candidate = Candidate.objects.get(user=user)
-        resume = ResumeFile.objects.create(candidate=candidate)
-        resume_created = serializer.create(resume, request.data)
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
-        if not resume_created:
-            return Response({'status': 'error', 'detail': "Error creating resume"})
-        
-        return Response({'status':"success", 'detail': "Resume created successfully!", 'resume_id': resume.id})
-    
     
 class ChangeResumeView(generics.CreateAPIView):
     serializer_class = ChangeResumeSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            resume =get_object(ResumeFile, id=request.data['resume_id'])
+            resume_changed = serializer.change(resume, request.data)
+            
+            if not resume_changed:
+                return get_response('error', 'Error changing resume')
+            
+            return get_response('success', 'Resume file changed successfully!')
         
-        resume = ResumeFile.objects.get(id=request.data['resume_id'])
-        resume_changed = serializer.change(resume, request.data)
-        
-        if not resume_changed:
-            return Response({'status': 'error', 'detail': 'Error changing resume'})
-        
-        return Response({'status': 'success', 'detail': 'Resume file changed successfully!'})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 
 class DeleteResumeView(generics.CreateAPIView):
@@ -361,48 +409,58 @@ class DeleteResumeView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            resume = get_object(ResumeFile, id=request.data['resume_id'])
+            resume_deleted = serializer.delete_resume(resume, request.data)
+            if not resume_deleted:
+                return get_response("error", "Error deleting resume")
+            
+            return get_response("success", "Resume deleted successfully!")
         
-        resume = ResumeFile.objects.get(id=request.data['resume_id'])
-        resume_deleted = serializer.delete_resume(resume, request.data)
-        
-        if not resume_deleted:
-            return Response({'status': "error", "detail": "Error deleting resume"})
-        
-        return Response({"status": "success", "detail": "Resume deleted successfully!"})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 class ChangeCandidateProfileView(generics.CreateAPIView):
     serializer_class = ChangeCandidateProfileSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            change_personal = serializer.change_profile(candidate, request.data)
+            
+            if not change_personal:
+                return get_response('error', "Failed to change profile candidate data.")
+            
+            return get_response('success', 'Candidate`s profile data changed successfully!')
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        candidate = Candidate.objects.get(user=user)
-        change_personal = serializer.change_profile(candidate, request.data)
-        
-        if not change_personal:
-            return Response({'status': 'error', 'detail': "Failed to change profile candidate data."})
-        
-        return Response({'status': 'success', 'detail': 'Candidate`s profile data changed successfully!'})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 class CreateCandidateSocialView(generics.CreateAPIView):
     serializer_class = CreateCandidateSocialSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            candidate_social = get_object(CandidateSocialLink, candidate=candidate)
+            set_link = serializer.create_link(candidate_social, request.data)
+            
+            if not set_link:
+                return get_response('error', "Error creating candidate social link")
+            
+            return get_response('success', 'Candidate social network link created successfully!', {'id': set_link.id})
         
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        candidate = Candidate.objects.get(user=user)
-        candidate_social = CandidateSocialLink.objects.create(candidate=candidate)
-        set_link = serializer.create_link(candidate_social, request.data)
-        
-        if not set_link:
-            return Response({'status': 'error', 'detail': "Error creating candidate social link"})
-        
-        return Response({'status': 'success', 'detail': 'Candidate social network link created successfully!', 'id': set_link.id})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 
 class DeleteCandidateSocialView(generics.CreateAPIView):
@@ -410,14 +468,18 @@ class DeleteCandidateSocialView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        link = CandidateSocialLink.objects.get(id=request.data['id'])
-        delete_link = serializer.delete_link(link)
+        try:
+            serializer.is_valid(raise_exception=True)
+            link = get_object(CandidateSocialLink, id=request.data['id'])
+            delete_link = serializer.delete_link(link)
+            
+            if not delete_link:
+                return get_response('error', "Error deleting candidate social link")
+            
+            return get_response('success', "Deleted successfully!")
         
-        if not delete_link:
-            return Response({'status': 'error', 'detail': "Error deleting candidate social link"})
-        
-        return Response({'status': 'success', 'detail': "Deleted successfully!"})
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
 class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
     serializer_class = ChangeCandidateAccountSettingsSerializer
@@ -425,14 +487,14 @@ class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = CustomUser.objects.get(id=request.data['user_id'])
-        candidate = Candidate.objects.get(user=user)
+        user = get_object(CustomUser, id=request.data['user_id'])
+        candidate = get_object(Candidate, user=user)
         change_settings = serializer.change_settings(candidate, request.data)
         
         if not change_settings:
-            return Response({'status': 'error', 'detail': 'Failed to change candidate settings'})
+            return get_response('error', 'Failed to change candidate settings')
         
-        return Response({'status':'success', 'detail': "Candidate settings changed successfully!"})
+        return get_response('success', "Candidate settings changed successfully!")
 
 
 class GetUserView(generics.CreateAPIView):
@@ -440,17 +502,22 @@ class GetUserView(generics.CreateAPIView):
     
     def get(self, request, token):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.find_user(token)
-        if user:
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.find_user(token)
+            
+            if not user:
+                raise NotFound("User not found.")
+
             user_data = {
-                    'full_name': user.full_name,
-                    'email': user.email,
-                    'status': user.status,
-                    'verified_email': user.verified_email
-                }
+                'full_name': user.full_name,
+                'email': user.email,
+                'status': user.status,
+                'verified_email': user.verified_email
+            }
+
             if user.status == 'employer':
-                employer = Employer.objects.get(user=user)
+                employer = get_object(Employer, user=user)
                 employer_data = {
                     'user_id': user.id,
                     'logo': employer.logo.url,
@@ -467,10 +534,11 @@ class GetUserView(generics.CreateAPIView):
                     "phone_number": employer.phone_number,
                     "email": employer.email
                 }
-                
-                return Response({'status': 'success', 'user': {"user_data": user_data, "employer_data": employer_data}})
+                return get_response('success', additional={'user': {"user_data": user_data, "employer_data": employer_data}}, status=status.HTTP_200_OK)
+            
+            
             elif user.status == 'candidate':
-                candidate = Candidate.objects.get(user=user)
+                candidate = get_object(Candidate, user=user)
                 candidate_data = {
                     "full_name": candidate.full_name,
                     "headline": candidate.headline,
@@ -492,9 +560,10 @@ class GetUserView(generics.CreateAPIView):
                     "profile_privacy": candidate.profile_privacy,
                     "resume_privacy": candidate.resume_privacy,
                 }
-                return Response({'status': 'success'}, user_data, candidate_data)
-        else:
-            return Response({'status': 'error', 'detail': "User not found."})
+                return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
+            
+        except serializers.ValidationError as e:
+            return error_detail(e)
     
     
 class DeleteUserView(generics.CreateAPIView):
@@ -502,26 +571,30 @@ class DeleteUserView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        delete_user = serializer.delete_user(request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            delete_user = serializer.delete_user(request.data)
+            
+            if not delete_user:
+                return get_response('error', "Error deleting user")
+            
+            return Response('success', "User deleted successfully!")
         
-        if not delete_user:
-            return Response({'status': 'error', 'detail': "Error deleting user"})
-        
-        return Response({"status": 'success', 'detail': "User deleted successfully!"})
+        except serializers.ValidationError as e:
+            return error_detail(e)
         
 
-class TestImageView(generics.CreateAPIView):
-    serializer_class = TestImageSerializer
+# class TestImageView(generics.CreateAPIView):
+#     serializer_class = TestImageSerializer
     
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+#     def create(self, request):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
         
-        check_valid = serializer.check(request.data)
+#         check_valid = serializer.check(request.data)
         
-        if not check_valid:
-            return Response({"status": 'proebali'})
+#         if not check_valid:
+#             return get_response('error', 'watafak wrong data', status=status.HTTP_306_RESERVED)
         
-        return Response({'status': 'vse zaebok'})
+#         return get_response('vse zaebok', '123', status=status.HTTP_200_OK)
         

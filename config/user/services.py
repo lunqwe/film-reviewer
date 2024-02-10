@@ -2,14 +2,24 @@ from .models import CustomUser, Employer, Candidate, EmployerSocialLink, Candida
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 import os
+from rest_framework.response import Response
+from rest_framework import status
 
 
-
-
-def get_user(**kwargs):
+def create_object(model, **kwargs):
     try:
-        user = CustomUser.objects.get(**kwargs)
-        return user
+        model = model.objects.create(**kwargs)
+        return model
+    
+    except Exception as e:
+        print("Error creating object")
+        print(e)
+
+
+def get_object(model, **kwargs):
+    try:
+        model = model.objects.get(**kwargs)
+        return model
     except:
         return False
     
@@ -31,3 +41,32 @@ def send_email(user_email, subject, email_content):
         print("Error while sending email")
         print(e)
         return False
+    
+
+def get_response(response_status, detail=(), additional: dict=(),  status=()):
+    response_dict = {}
+    if response_status:
+        response_dict['status'] = response_status
+    if detail:
+        response_dict['detail'] = detail
+    if additional:
+        for key, value in additional.items():
+            response_dict[key] = value  
+            
+    return Response(response_dict, status)
+
+def error_detail(e):
+    errors = e.detail
+    
+    error_messages = {}
+    for field, messages in errors.items():
+        error_messages[field] = messages[0].__str__()
+
+    
+    return get_response('error', additional={'detail': error_messages}, status=status.HTTP_400_BAD_REQUEST)
+
+def change_data(instance, fields_to_update, validated_data):
+    for field in fields_to_update:
+        setattr(instance, field, validated_data.get(field, getattr(instance, field)))
+    instance.save()
+    return instance

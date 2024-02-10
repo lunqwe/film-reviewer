@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
@@ -29,6 +30,7 @@ class CustomUser(AbstractUser):
     
     objects = CustomUserManager()
     
+    
 class Verificator(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     code = models.CharField(max_length=6, default='0')
@@ -42,8 +44,8 @@ class Verificator(models.Model):
     
 class Employer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    logo = models.ImageField(upload_to='./logo', blank=True, null=True)
-    banner = models.ImageField(upload_to='./banners', blank=True, null=True)
+    logo = models.ImageField(default='defaul_icon.png', upload_to='./logo', blank=True, null=True)
+    banner = models.ImageField(default='defaul_icon.png', upload_to='./banners', blank=True, null=True)
     company_name = models.CharField(max_length=255, default="")
     about = models.TextField(blank=True, null=True, default='')
     
@@ -57,6 +59,7 @@ class Employer(models.Model):
     map_location = models.CharField(max_length=255, blank=True, null=True, default='')
     phone_number = models.CharField(max_length=30, default='')
     email = models.EmailField(blank=True, null=True, default='')
+    
     def __str__(self):
         return f'{self.company_name}({self.user.username})'
 
@@ -70,7 +73,7 @@ class EmployerSocialLink(models.Model):
 
 class Candidate(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='candidate/profile_pics', blank=True, null=True)
+    profile_picture = models.ImageField(default='defaul_icon.png', upload_to='candidate/profile_pics', blank=True, null=True)
     full_name = models.CharField(max_length=255, default='0')
     headline = models.CharField(max_length=255, default='0')
     experiences = models.CharField(max_length=999, default='0')

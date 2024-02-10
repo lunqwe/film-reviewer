@@ -9,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink, CandidateSocialLink
-from .services import get_user
+from .services import get_object, change_data
 
 User = get_user_model()
 
@@ -57,7 +57,7 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         # Проверяем существование пользователя с данным email
-        user = get_user(email=email)
+        user = get_object(CustomUser, email=email)
 
         if user:
             # Проверяем валидность пароля
@@ -76,7 +76,7 @@ class SendVerificationSerializer(serializers.Serializer):
     user_id = serializers.CharField()
     
     def create(self, data):
-        user = get_user(id=data['user_id'])
+        user = get_object(CustomUser, id=data['user_id'])
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
@@ -86,9 +86,9 @@ class CheckVerificationSerializer(serializers.Serializer):
     def validate(self, data):
         self.user_id = data['user_id']
         self.code = data['code']
-        user = CustomUser.objects.get(id=self.user_id)
+        user = get_object(CustomUser, id=data['user_id'])
         if self.code and len(self.code) == 6 and not user.verified_email:
-            verificator = Verificator.objects.get(user=user)
+            verificator = get_object(Verificator, user=user)
             expired = verificator.is_expired()
             # True if expired, else False
             if not expired:
@@ -107,10 +107,10 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
     
     def validate(self, data):
         self.email = data['email']
-        user = CustomUser.objects.get(email=self.email)
+        user = get_object(CustomUser, email=self.email)
         if user:
             user_uidb64 = urlsafe_base64_encode(str(user.pk).encode('utf-8')) # encode 
-            user_token = Token.objects.get(user=user)
+            user_token = get_object(Token, user=user)
             return [user_uidb64, str(user_token), user.email]
 
             
@@ -121,7 +121,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     password1 = serializers.CharField(max_length=255)
     password2 = serializers.CharField(max_length=255)
     
-    def create(self, data):
+    def validate(self, data):
         self.password1 = data['password1']
         self.password2 = data['password2']
         
@@ -152,7 +152,10 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Employer
-        fields = ['user_id', 'logo', 'banner', 'company_name', 'about', 'organization_type', 'industry_types', 'team_size', 'website', 'year_of_establishment', 'company_vision', 'map_location', 'phone_number']
+        fields = ['user_id', 'logo', 'banner', 'company_name', 'about',
+                  'organization_type', 'industry_types', 'team_size',
+                  'website', 'year_of_establishment', 'company_vision',
+                  'map_location', 'phone_number']
         
         extra_kwargs = {
             'logo': {'required': False},
@@ -172,36 +175,32 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        instance.logo = validated_data.get('logo', instance.logo)
-        instance.banner = validated_data.get('banner', instance.banner)
-        instance.company_name = validated_data.get('company_name', instance.company_name)
-        instance.about = validated_data.get('about', instance.about)
-        instance.organization_type = validated_data.get('organization_type', instance.organization_type)
-        instance.industry_types = validated_data.get('industry_types', instance.industry_types)
-        instance.team_size = validated_data.get('team_size', instance.team_size)
-        instance.website = validated_data.get('website', instance.website)
-        instance.year_of_establishment = validated_data.get('year_of_establishment', instance.year_of_establishment)
-        instance.company_vision = validated_data.get('company_vision', instance.company_vision)
-        instance.map_location = validated_data.get('map_location', instance.map_location)
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        fields_to_update = [
+            'logo', 'banner', 'company_name', 'about', 'organization_type',
+            'industry_types', 'team_size', 'website', 'year_of_establishment',
+            'company_vision', 'map_location', 'phone_number'
+        ]
+        changed_instance = change_data(instance, fields_to_update, validated_data)
         social_links = validated_data.get('social_links')
-        for link in social_links:
-            EmployerSocialLink.objects.create(
-                employer = instance,
-                social_network=link['social_media'],
-                link=link['link'],
-                frontend_id=link['id']
-            )
-        
-        instance.save()
-        return instance
+        if social_links:
+            EmployerSocialLink.objects.filter(employer=changed_instance).delete()  # Удаляем все предыдущие связи
+
+            for link in social_links:
+                EmployerSocialLink.objects.create(
+                    employer=instance,
+                    social_network=link['social_media'],
+                    link=link['link'],
+                    frontend_id=link['id']
+                )
+
+        return changed_instance
     
     
 class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Employer
-        fields = ['user_id', 'logo', 'banner', 'company_name', 'about']
+        fields = ['logo', 'banner', 'company_name', 'about']
         
         extra_kwargs = {
             'logo': {'required': False},
@@ -211,15 +210,11 @@ class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
         }
         
     
-    def update(self, instance, data):
-        
-        instance.logo = data.get('logo', instance.logo)
-        instance.banner = data.get('banner', instance.banner)
-        instance.company_name = data.get('company_name', instance.company_name)
-        instance.about = data.get('about', instance.about)
-        
-        instance.save()
-        return instance
+    def update(self, instance, validated_data):
+        fields_to_update = ['user_id', 'logo', 'banner', 'company_name', 'about']
+        changed_instance = change_data(instance, fields_to_update, validated_data)
+
+        return changed_instance
     
     
 class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
@@ -237,16 +232,10 @@ class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
             'company_vision': {'required': False}
         }
         
-    def change_founding(self, instance,  data):
-        instance.organization_type = data.get('organization_type', instance.organization_type)
-        instance.industry_types = data.get('industry_types', instance.industry_types)
-        instance.team_size = data.get('team_size', instance.team_size)
-        instance.year_of_establishment = data.get('year_of_establishment', instance.year_of_establishment)
-        instance.website = data.get('website', instance.website)
-        instance.company_vision = data.get('company_vision', instance.company_vision)
-        
-        instance.save()
-        return instance
+    def change_founding(self, instance,  validated_data):
+        fields_to_update = ['organization_type', 'industry_types', 'team_size', 'year_of_establishment', 'website', 'company_vision']
+        changed_instance = change_data(instance, fields_to_update, validated_data)
+        return changed_instance
     
 class CreateEmployerSocialSerializer(serializers.ModelSerializer):
     
@@ -424,8 +413,8 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
 class GetUserSerializer(serializers.Serializer):
     
     def find_user(self, token_key):
-        token = Token.objects.get(key=token_key)
-        return token.user
+        user = get_object(CustomUser, auth_token=token_key)
+        return user
         
         
 class DeleteUserSerializer(serializers.Serializer):
