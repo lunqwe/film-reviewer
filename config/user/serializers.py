@@ -65,7 +65,6 @@ class SendVerificationSerializer(serializers.Serializer):
     
     def create(self, data):
         user = get_object(CustomUser, id=data['user_id'])
-        print(user.username)
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
@@ -78,6 +77,7 @@ class CheckVerificationSerializer(serializers.Serializer):
         user = get_object(CustomUser, id=data['user_id'])
         if self.code and len(self.code) == 6 and not user.verified_email:
             verificator = get_object(Verificator, user=user)
+            print(verificator)
             expired = verificator.is_expired()
             # True if expired, else False
             if not expired:

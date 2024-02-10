@@ -114,7 +114,7 @@ class VerifyEmailView(generics.CreateAPIView):
                     if mail:
                         return get_response('success', 'Verification message sent!', status=status.HTTP_201_CREATED)
                     else:
-                        return get_response('error', 'Failed to send email.', status=status.HTTP_408_REQUEST_TIMEOUT)
+                        return get_response('error', 'Failed to send email. (401 Unauthorized) ', status=status.HTTP_408_REQUEST_TIMEOUT)
                 else:
                     return get_response('error', "User is already verified.", status=status.HTTP_400_BAD_REQUEST)
             else:
