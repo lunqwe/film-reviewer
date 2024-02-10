@@ -69,7 +69,7 @@ class SendVerificationSerializer(serializers.Serializer):
     
 class CheckVerificationSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
-    user_id = serializers.IntegerField()
+    user_id = serializers.CharField()
     
     def validate(self, data):
         self.user_id = data['user_id']

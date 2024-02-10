@@ -20,7 +20,8 @@ def get_object(model, **kwargs):
     try:
         model = model.objects.get(**kwargs)
         return model
-    except:
+    except Exception as e:
+        print(e)
         return False
     
     
@@ -35,7 +36,6 @@ def send_email(user_email, subject, email_content):
                 )
 
         response = sg.send(message)
-        print(response)
         return response
     except Exception as e:
         print("Error while sending email")

@@ -105,9 +105,23 @@ class VerifyEmailView(generics.CreateAPIView):
             if user:
                 if not check_verified:
                     generated_code = random.randint(100000,1000000)
-                    verificator = create_object(Verificator, user=user)
+                    try:
+                        verificator = Verificator.objects.filter(user=user)
+                        if len(verificator) == 1:
+                            verificator = verificator[0]
+                            print('get')
+                        elif len(verificator) > 1:
+                            raise ValueError('User has more than 1 verificator. Code error')
+                        
+                        elif len(verificator) < 1:
+                            verificator = create_object(Verificator, user=user)
+                            print('create')
+                    except Exception as e:
+                        print(e)
+                    print(verificator)
                     print(generated_code)
                     verificator.code = str(generated_code)
+                    verificator.time_created = timezone.now()
                     verificator.save()
                     
                     mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
@@ -143,6 +157,8 @@ class CheckVerificationView(generics.CreateAPIView):
                 return get_response('error', "Verificator never existed.", status=status.HTTP_401_UNAUTHORIZED)
             
             elif check_verification == 'success':
+                user = get_object(CustomUser, id=request.data['user_id'])
+                user.verified_email = True
                 return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
             
             else:
