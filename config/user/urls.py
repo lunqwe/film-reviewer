@@ -27,7 +27,7 @@ urlpatterns = [
     path('delete-resume/', DeleteResumeView.as_view(), name='delete-resume'),
     path('get-user/<token>', GetUserView.as_view(), name='get_user'),
     path('delete-user/', DeleteUserView.as_view(), name='delete-user'),
-    path('test-image/', TestImageView.as_view(), name='test'),
+    # path('test-image/', TestImageView.as_view(), name='test'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
