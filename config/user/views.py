@@ -145,7 +145,7 @@ class CheckVerificationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            check_verification = serializer.validate(request.data)
+            check_verification = serializer.verificate(request.data)
             
             if check_verification == 'already_verified':
                 return get_response('error', 'User email is already verified.', status=status.HTTP_400_BAD_REQUEST)
@@ -154,11 +154,12 @@ class CheckVerificationView(generics.CreateAPIView):
                 return get_response('error', 'Verification code expired.', status=status.HTTP_408_REQUEST_TIMEOUT)
             
             elif check_verification == 'wrong_code':
-                return get_response('error', "Verificator never existed.", status=status.HTTP_401_UNAUTHORIZED)
+                return get_response('error', "Wrong code", status=status.HTTP_401_UNAUTHORIZED)
             
             elif check_verification == 'success':
                 user = get_object(CustomUser, id=request.data['user_id'])
                 user.verified_email = True
+                user.save()
                 return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
             
             else:

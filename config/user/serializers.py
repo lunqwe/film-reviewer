@@ -71,15 +71,16 @@ class CheckVerificationSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
     user_id = serializers.CharField()
     
-    def validate(self, data):
+    def verificate(self, data):
         self.user_id = data['user_id']
         self.code = data['code']
         user = get_object(CustomUser, id=data['user_id'])
-        if self.code and len(self.code) == 6 and not user.verified_email:
-            verificator = get_object(Verificator, user=user)
-            print(verificator)
-            expired = verificator.is_expired()
+        verificator = get_object(Verificator, user=user)
+        print(verificator)
+        expired = verificator.is_expired()
+        print(expired)
             # True if expired, else False
+        if verificator:
             if not expired:
                 if self.code == verificator.code:
                     user.verified_email = True
@@ -90,6 +91,7 @@ class CheckVerificationSerializer(serializers.Serializer):
             else:
                 verificator.delete()
                 return 'expired'
+            
             
 class ResetPasswordRequestSerializer(serializers.Serializer):
     email = serializers.CharField()
