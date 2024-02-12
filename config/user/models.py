@@ -81,7 +81,7 @@ class Candidate(models.Model):
     website = models.CharField(max_length=999, default='0')
     
     nationality = models.CharField(max_length=255, blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)
+    date_of_birth = models.CharField(blank=True, null=True)
     gender = models.CharField(max_length=255, blank=True, null=True)
     marital_status = models.CharField(max_length=255, blank=True, null=True)
     biography = models.TextField(blank=True, null=True)
