@@ -16,9 +16,9 @@ def create_object(model, **kwargs):
         print(e)
 
 
-def get_object(model, only_values=(), **kwargs):
+def get_object(model, **kwargs):
     try:
-        model = model.objects.filter(**kwargs).only(only_values)
+        model = model.objects.filter(**kwargs)[0]
         return model
     except Exception as e:
         print(e)
@@ -53,7 +53,7 @@ def get_response(response_status, detail=(), additional: dict=(),  status=()):
         for key, value in additional.items():
             response_dict[key] = value  
             
-    return Response(response_dict, status)
+    return Response(response_dict, *status)
 
 def error_detail(e):
     errors = e.detail

@@ -269,7 +269,8 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         fields_to_update = ['profile_picture', 'full_name', 'headline', 'educations', 'website']
-        return change_data(instance, fields_to_update, validated_data)
+        data = change_data(instance, fields_to_update, validated_data)
+        return data
             
         
 class CreateResumeSerializer(serializers.ModelSerializer):
