@@ -54,7 +54,9 @@ def get_response(response_status, detail=(), additional: dict=(),  status=()):
         for key, value in additional.items():
             response_dict[key] = value  
             
-    return Response(response_dict, *status)
+    
+            
+    return Response(response_dict, status)
 
 def error_detail(e):
     errors = e.detail
