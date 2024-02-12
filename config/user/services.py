@@ -6,9 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-def create_object(model, **kwargs):
+def create_object(model, data_dict):
     try:
-        model = model.objects.create(**kwargs)
+        model = model.objects.create(**data_dict)
         return model
     
     except Exception as e:

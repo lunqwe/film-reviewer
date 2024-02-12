@@ -467,13 +467,15 @@ class CreateCandidateSocialView(generics.CreateAPIView):
             
             user = get_object(CustomUser, id=request.data['user_id'])
             candidate = get_object(Candidate, user=user)
-            candidate_social = get_object(CandidateSocialLink, candidate=candidate)
-            set_link = serializer.create_link(candidate_social, request.data)
+            print(candidate)
+            candidate_social = create_object(CandidateSocialLink, {'candidate': candidate,
+                                                                   "social_network": request.data['social_network'],
+                                                                   'link': request.data['link']})
             
-            if not set_link:
+            if not candidate_social:
                 return get_response('error', "Error creating candidate social link")
             
-            return get_response('success', 'Candidate social network link created successfully!', {'id': set_link.id})
+            return get_response('success', 'Candidate social network link created successfully!', {'id': candidate_social.id})
         
         except serializers.ValidationError as e:
             return error_detail(e)

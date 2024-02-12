@@ -339,7 +339,9 @@ class CreateCandidateSocialSerializer(serializers.ModelSerializer):
         }
         
     def create_link(self, instance, data):
-        return create_object(instance, data)
+        user = get_object(CustomUser, id=data['user_id'])
+        fields = {'user': user, 'social_network': data['social_network'], "link": data['link']}
+        return create_object(instance, fields)
     
 class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
     class Meta:
