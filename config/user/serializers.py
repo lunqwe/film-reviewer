@@ -355,7 +355,7 @@ class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
 class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = ['map_location', 'phone_number', 'email', "shortlist", "expire", "five_job_alerts", "profile_saved", "rejection", "profile_privacy", "resume_privacy"]
+        fields = ['map_location', 'phone_number', "email"]
         extra_kwargs = {
             'user_id': {'required': True},
             'map_location': {'required': False},
