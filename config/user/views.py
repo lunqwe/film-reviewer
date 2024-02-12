@@ -106,7 +106,7 @@ class VerifyEmailView(generics.CreateAPIView):
                 if not check_verified:
                     generated_code = random.randint(100000,1000000)
                     try:
-                        verificator = Verificator.objects.filter(user=user)
+                        verificator = Verificator.objects.filter(user=user).only("code", 'time_created')
                         if len(verificator) == 1:
                             verificator = verificator[0]
                             print('get')
@@ -157,7 +157,7 @@ class CheckVerificationView(generics.CreateAPIView):
                 return get_response('error', "Wrong code", status=status.HTTP_401_UNAUTHORIZED)
             
             elif check_verification == 'success':
-                user = get_object(CustomUser, id=request.data['user_id'])
+                user = get_object(CustomUser, id=request.data['user_id'], only_values=('verified_email'))
                 user.verified_email = True
                 user.save()
                 return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
@@ -217,7 +217,6 @@ class ResetPasswordView(generics.CreateAPIView):
                 return get_response('error', 'Token not found.', status=status.HTTP_404_NOT_FOUND)
             
             if password:
-                print(password)
                 user.set_password(password)
                 user.save()
                 token_obj.delete()
@@ -238,7 +237,7 @@ class ChangePasswordView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             current_password = request.data['current_password']
-            user = get_object(CustomUser, id=request.data['user_id'])
+            user = get_object(CustomUser, id=request.data['user_id']).defer()
             
             if user.check_password(current_password):
                 change_password = serializer.change(user, request.data)
@@ -283,7 +282,7 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
+            user = get_object(CustomUser, id=request.data['user_id'], defer=())
             employer = get_object(Employer, user=user)
             employer_changed = serializer.update(employer, request.data)
             
@@ -503,15 +502,55 @@ class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = get_object(CustomUser, id=request.data['user_id'])
-        candidate = get_object(Candidate, user=user)
-        change_settings = serializer.change_settings(candidate, request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            change_settings = serializer.change_settings(candidate, request.data)
+            
+            if not change_settings:
+                return get_response('error', 'Failed to change candidate settings')
+            
+            return get_response('success', "Candidate settings changed successfully!")
         
-        if not change_settings:
-            return get_response('error', 'Failed to change candidate settings')
-        
-        return get_response('success', "Candidate settings changed successfully!")
+        except serializers.ValidationError as e:
+            return error_detail(e)
+    
+class ChangeCandidateNotificationsView(generics.CreateAPIView):
+    serializer_class = ChangeCandidateNotificationsSerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            change_settings = serializer.change_settings(candidate, request.data)
+            
+            if not change_settings:
+                return get_response('error', 'Failed to change candidate notifications')
+            
+            return get_response('success', "Candidate notifications changed successfully!")
+        except serializers.ValidationError as e:
+            return error_detail(e)
+            
+class ChangeCandidatePrivacyView(generics.CreateAPIView):
+    serializer_class = ChangeCandidatePrivacySerializer
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = get_object(CustomUser, id=request.data['user_id'])
+            candidate = get_object(Candidate, user=user)
+            change_settings = serializer.change_settings(candidate, request.data)
+            
+            if not change_settings:
+                return get_response('error', 'Failed to change candidate privacy')
+            
+            return get_response('success', "Candidate privacy changed successfully!")
+        except serializers.ValidationError as e:
+            return error_detail(e)
 
 
 class GetUserView(generics.CreateAPIView):

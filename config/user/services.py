@@ -16,9 +16,9 @@ def create_object(model, **kwargs):
         print(e)
 
 
-def get_object(model, **kwargs):
+def get_object(model, only_values=(), **kwargs):
     try:
-        model = model.objects.get(**kwargs)
+        model = model.objects.filter(**kwargs).only(only_values)
         return model
     except Exception as e:
         print(e)
@@ -79,3 +79,4 @@ def create_user(validated_data):
     user.save()
     
     return user
+

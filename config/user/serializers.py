@@ -64,7 +64,7 @@ class SendVerificationSerializer(serializers.Serializer):
     user_id = serializers.CharField()
     
     def create(self, data):
-        user = get_object(CustomUser, id=data['user_id'])
+        user = get_object(CustomUser, id=data['user_id'], only_values=('email', 'verified_email'))
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
@@ -358,6 +358,18 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
             'map_location': {'required': False},
             'phone_number': {'required': False},
             'email': {'required': False},
+        }
+        
+    def change_settings(self, instance, data):
+        fields_to_update = ['map_location', 'phone_number', 'email']
+        return change_data(instance, fields_to_update, data)
+    
+class ChangeCandidateNotificationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
+        extra_kwargs = {
+            'user_id': {'required': True},
             "shortlist": {'required': False},
             "expire": {'required': False},
             "five_job_alerts": {'required': False},
@@ -366,10 +378,26 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
             "profile_privacy": {'required': False},
             "resume_privacy": {'required': False},
         }
+    def change_settings(self, instance, data):
+        fields_to_update = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
+        return change_data(instance, fields_to_update, data)
+        
+#"profile_privacy": {'required': False},
+            #"resume_privacy": {'required': False},
+            
+class ChangeCandidatePrivacySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = ["profile_privacy", "resume_privacy"]
+        extra_kwargs = {
+            "profile_privacy": {'required': False},
+            "resume_privacy": {'required': False},
+        }
         
     def change_settings(self, instance, data):
-        fields_to_update = ['map_location', 'phone_number', 'email', "shortlist", "expire", "five_job_alerts", "profile_saved", "rejection", "profile_privacy", "resume_privacy"]
+        fields_to_update = ["profile_privacy", "resume_privacy"]
         return change_data(instance, fields_to_update, data)
+    
     
 class GetUserSerializer(serializers.Serializer):
     
