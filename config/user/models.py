@@ -58,7 +58,7 @@ class Employer(models.Model):
     
     map_location = models.CharField(max_length=255, blank=True, null=True, default='')
     phone_number = models.CharField(max_length=30, default='')
-    email = models.EmailField(blank=True, null=True, default='')
+    candidate_email = models.EmailField(blank=True, null=True, default='')
     
     def __str__(self):
         return f'{self.company_name}({self.user.username})'
