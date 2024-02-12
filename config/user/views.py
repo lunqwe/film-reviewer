@@ -407,7 +407,7 @@ class ChangeResumeView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            resume =get_object(ResumeFile, id=request.data['resume_id'])
+            resume = get_object(ResumeFile, id=request.data['resume_id'])
             resume_changed = serializer.change(resume, request.data)
             
             if not resume_changed:

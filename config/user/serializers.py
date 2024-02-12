@@ -292,7 +292,7 @@ class ChangeResumeSerializer(serializers.ModelSerializer):
         model = ResumeFile
         fields = ['title', 'file']
         extra_kwargs = {
-            'user_id': {'required': True},
+            'resume_id': {'required': True},
         }
     
     def change(self, instance, validated_data):
