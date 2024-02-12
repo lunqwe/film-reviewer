@@ -6,14 +6,15 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-def create_object(model, data_dict):
+def create_object(model_class, data_dict):
     try:
-        model = model.objects.create(**data_dict)
-        return model
+        model_instance = model_class.objects.create(**data_dict)
+        print(model_instance)
+        return model_instance
     
     except Exception as e:
-        print("Error creating object")
-        print(e)
+        print(f"Error creating object: {e}")
+        return None
 
 
 def get_object(model, **kwargs):

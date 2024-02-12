@@ -388,10 +388,9 @@ class CreateResumeView(generics.CreateAPIView):
             
             user = get_object(CustomUser, id=request.data['user_id'])
             candidate = get_object(Candidate, user=user)
-            resume = create_object(ResumeFile, candidate=candidate)
-            resume_created = serializer.create(resume, request.data)
+            resume = create_object(ResumeFile, {'candidate': candidate})
             
-            if not resume_created:
+            if not resume:
                 return get_response('error', "Error creating resume")
             
             return get_response("success", "Resume created successfully!", {'resume_id': resume.id})
