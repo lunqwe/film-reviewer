@@ -372,7 +372,7 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
             if not candidate:
                 return get_response('error', "Error updating candidate.")
             
-            return get_response("success", "Candidate info changed successfully!")
+            return get_response("success", "Candidate info changed successfully!", status=status.HTTP_202_ACCEPTED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
