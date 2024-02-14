@@ -23,7 +23,7 @@ def get_object(model, **kwargs):
         return model
     except Exception as e:
         print(e)
-        raise ValueError()
+        raise ValueError(e)
     
     
 def send_email(user_email, subject, email_content):
