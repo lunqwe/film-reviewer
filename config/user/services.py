@@ -19,11 +19,11 @@ def create_object(model_class, data_dict):
 
 def get_object(model, **kwargs):
     try:
-        model = model.objects.filter(**kwargs)[0]
+        model = model.objects.get(**kwargs)
         return model
     except Exception as e:
         print(e)
-        return False
+        raise ValueError()
     
     
 def send_email(user_email, subject, email_content):
