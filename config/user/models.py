@@ -60,15 +60,11 @@ class Employer(models.Model):
     phone_number = models.CharField(max_length=30, default='')
     email = models.CharField(max_length=255, blank=True, null=True, default='')
     
+    links = models.JSONField(default=list)
+    
     def __str__(self):
         return f'{self.company_name}({self.user.username})'
 
-class EmployerSocialLink(models.Model):
-    employer = models.ForeignKey(Employer, on_delete=models.CASCADE)
-    social_network = models.CharField(max_length=255, blank=True, null=True)
-    link = models.URLField(blank=True, null=True)
-    frontend_id = models.CharField(blank=True, null=True)
-    
     
 
 class Candidate(models.Model):
@@ -100,6 +96,8 @@ class Candidate(models.Model):
     resume_privacy = models.BooleanField(default=False)
     email = models.CharField(max_length=255, blank=True, null=True, default='')
     
+    links = models.JSONField(default=list)
+    
     def __str__(self):
         return f'{self.id}({self.user.username})'
     
@@ -116,10 +114,5 @@ class ResumeFile(models.Model):
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='candidate/resumes', blank=True, null=True)
     
-class CandidateSocialLink(models.Model):
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    social_network = models.CharField(max_length=255)
-    link = models.URLField(blank=True, null=True)
-
     
     

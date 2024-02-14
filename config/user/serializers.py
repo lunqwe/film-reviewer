@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile, EmployerSocialLink, CandidateSocialLink
+from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile
 from .services import get_object, change_data, create_user, create_object
 
 User = get_user_model()
@@ -144,7 +144,7 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
         fields = ['user_id', 'logo', 'banner', 'company_name', 'about',
                   'organization_type', 'industry_types', 'team_size',
                   'website', 'year_of_establishment', 'company_vision',
-                  'map_location', 'phone_number']
+                  'map_location', 'phone_number', 'links']
         
         extra_kwargs = {
             'logo': {'required': False},
@@ -159,7 +159,7 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
             'company_vision': {'required': False},
             'map_location': {'required': False},
             'phone_number': {'required': False},
-            'social_links': {'required': False},
+            'links': {'required': False},
             
         }
 
@@ -167,19 +167,12 @@ class SaveEmployerSerializer(serializers.ModelSerializer):
         fields_to_update = [
             'logo', 'banner', 'company_name', 'about', 'organization_type',
             'industry_types', 'team_size', 'website', 'year_of_establishment',
-            'company_vision', 'map_location', 'phone_number'
+            'company_vision', 'map_location', 'phone_number', 'links'
         ]
         changed_instance = change_data(instance, fields_to_update, validated_data)
-        social_links = validated_data.get('social_links')
+        social_links = validated_data.get('links')
         if social_links:
-            for link in social_links:
-                link_data = {
-                    'employer': instance,
-                    "social_network": link['social_media'],
-                    "link": link['link'],
-                    "frontend_id": link['id']
-                }
-                create_object(EmployerSocialLink, link_data)
+            instance.links = social_links
 
         return changed_instance
     
@@ -225,15 +218,15 @@ class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
         changed_instance = change_data(instance, fields_to_update, validated_data)
         return changed_instance
     
-class CreateEmployerSocialSerializer(serializers.ModelSerializer):
+class EmployerSocialLinksSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = EmployerSocialLink
-        fields = ['social_network', 'link']
+        model = Employer
+        fields = ['links']
         
-    def create(self, instance, validated_data):
-        fields_to_update = ['social_network', 'link']
-        changed_instance = change_data(instance, fields_to_update, validated_data)
+    def change_links(self, employer, validated_data):
+        fields_to_update = ['links']
+        changed_instance = change_data(employer, fields_to_update, validated_data)
         return changed_instance
     
 class ChangeEmployerContactSerializer(serializers.ModelSerializer):
@@ -257,18 +250,19 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Candidate
-        fields = ['profile_picture', 'full_name', 'headline', 'educations', 'website']
+        fields = ['profile_picture', 'full_name', 'headline', 'educations','experiences', 'website']
         extra_kwargs = {
             'user_id': {'required': True},
             'profile_picture': {'required': False},
             'full_name': {'required': False},
             'headline': {'required': False},
+            'experiences': {'required': False},
             'educations': {'required': False},
             'website': {'required': False}
         }
 
     def update(self, instance, validated_data):
-        fields_to_update = ['profile_picture', 'full_name', 'headline', 'educations', 'website']
+        fields_to_update = ['profile_picture', 'full_name', 'headline', 'educations', 'experiences', 'website']
         data = change_data(instance, fields_to_update, validated_data)
         return data
             
@@ -330,27 +324,19 @@ class ChangeCandidateProfileSerializer(serializers.ModelSerializer):
         return change_data(candidate, fields_to_update, data)
     
     
-class CreateCandidateSocialSerializer(serializers.ModelSerializer):
+class CandidateSocialLinksSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CandidateSocialLink
-        fields = ['social_network', 'link']
+        model = Candidate
+        fields = ['links']
         extra_kwargs = {
             'user_id': {'required': True},
+            'links': {'required': False}
         }
         
-    def create_link(self, instance, data):
-        user = get_object(CustomUser, id=data['user_id'])
-        fields = {'user': user, 'social_network': data['social_network'], "link": data['link']}
-        return create_object(instance, fields)
+    def change_links(self, candidate, data):
+        fields_to_update = ['links']
+        return change_data(candidate, fields_to_update, data)
     
-class DeleteCandidateSocialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CandidateSocialLink
-        fields = ['id']
-    
-    def delete_link(self, instance):
-        instance.delete()
-        return True
     
 class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -378,8 +364,7 @@ class ChangeCandidateNotificationsSerializer(serializers.ModelSerializer):
             "five_job_alerts": {'required': False},
             "profile_saved": {'required': False},
             "rejection": {'required': False},
-            "profile_privacy": {'required': False},
-            "resume_privacy": {'required': False},
+            #add job alerts here
         }
     def change_settings(self, instance, data):
         fields_to_update = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]

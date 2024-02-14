@@ -16,7 +16,7 @@ import random
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 from .serializers import *
-from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile, EmployerSocialLink
+from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
 from .services import get_object, send_email, create_object, get_response, error_detail
 
 
@@ -315,8 +315,8 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
         except serializers.ValidationError as e:
             return error_detail(e)
     
-class CreateEmployerSocialView(generics.CreateAPIView):
-    serializer_class = CreateEmployerSocialSerializer
+class EmployerSocialLinksView(generics.CreateAPIView):
+    serializer_class = EmployerSocialLinksSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -324,13 +324,12 @@ class CreateEmployerSocialView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             user = get_object(CustomUser, id=request.data['user_id'])
             employer = get_object(Employer, user=user)
-            employer_link = create_object(EmployerSocialLink, employer=employer)
-            link_created = serializer.create(employer_link, request.data)
+            links_created = serializer.change_links(employer, request.data)
             
-            if not link_created:
-                return get_response('error', 'Error creating link model')
+            if not links_created:
+                return get_response('error', 'Error creating links model')
             
-            return get_response('success', "Link added successfully!")
+            return get_response('success', "Links added successfully!")
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -427,7 +426,7 @@ class DeleteResumeView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             resume = get_object(ResumeFile, id=request.data['resume_id'])
-            resume_deleted = serializer.delete_resume(resume, request.data)
+            resume_deleted = serializer.delete_resume(resume)
             if not resume_deleted:
                 return get_response("error", "Error deleting resume")
             
@@ -451,13 +450,13 @@ class ChangeCandidateProfileView(generics.CreateAPIView):
             if not change_personal:
                 return get_response('error', "Failed to change profile candidate data.")
             
-            return get_response('success', 'Candidate`s profile data changed successfully!')
+            return get_response('success', 'Candidate`s profile data changed successfully!',status=status.HTTP_201_CREATED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
     
-class CreateCandidateSocialView(generics.CreateAPIView):
-    serializer_class = CreateCandidateSocialSerializer
+class CandidateSocialLinksView(generics.CreateAPIView):
+    serializer_class = CandidateSocialLinksSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -466,37 +465,17 @@ class CreateCandidateSocialView(generics.CreateAPIView):
             
             user = get_object(CustomUser, id=request.data['user_id'])
             candidate = get_object(Candidate, user=user)
-            print(candidate)
-            candidate_social = create_object(CandidateSocialLink, {'candidate': candidate,
-                                                                   "social_network": request.data['social_network'],
-                                                                   'link': request.data['link']})
+            changed_links = serializer.change_links(candidate, request.data)
             
-            if not candidate_social:
-                return get_response('error', "Error creating candidate social link")
+            if not changed_links:
+                return get_response('error', "Error creating candidate social link", status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', 'Candidate social network link created successfully!', {'id': candidate_social.id})
+            return get_response('success', 'Candidate social network links changed successfully!', status=status.HTTP_201_CREATED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
     
 
-class DeleteCandidateSocialView(generics.CreateAPIView):
-    serializer_class = DeleteCandidateSocialSerializer
-    
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            link = get_object(CandidateSocialLink, id=request.data['id'])
-            delete_link = serializer.delete_link(link)
-            
-            if not delete_link:
-                return get_response('error', "Error deleting candidate social link")
-            
-            return get_response('success', "Deleted successfully!")
-        
-        except serializers.ValidationError as e:
-            return error_detail(e)
     
 class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
     serializer_class = ChangeCandidateAccountSettingsSerializer
@@ -510,14 +489,14 @@ class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
-                return get_response('error', 'Failed to change candidate settings')
+                return get_response('error', 'Failed to change candidate settings', status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', "Candidate settings changed successfully!")
+            return get_response('success', "Candidate settings changed successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
     
-class ChangeCandidateNotificationsView(generics.CreateAPIView):
+class ChangeCandidateNotificationsAndAlertsView(generics.CreateAPIView):
     serializer_class = ChangeCandidateNotificationsSerializer
     
     def create(self, request):
@@ -529,9 +508,9 @@ class ChangeCandidateNotificationsView(generics.CreateAPIView):
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
-                return get_response('error', 'Failed to change candidate notifications')
+                return get_response('error', 'Failed to change candidate notifications', status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', "Candidate notifications changed successfully!")
+            return get_response('success', "Candidate notifications changed successfully!", status=status.HTTP_200_OK)
         except serializers.ValidationError as e:
             return error_detail(e)
             
@@ -547,9 +526,9 @@ class ChangeCandidatePrivacyView(generics.CreateAPIView):
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
-                return get_response('error', 'Failed to change candidate privacy')
+                return get_response('error', 'Failed to change candidate privacy', status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', "Candidate privacy changed successfully!")
+            return get_response('success', "Candidate privacy changed successfully!", status=status.HTTP_200_OK)
         except serializers.ValidationError as e:
             return error_detail(e)
 
@@ -575,6 +554,7 @@ class GetUserView(generics.CreateAPIView):
 
             if user.status == 'employer':
                 employer = get_object(Employer, user=user)
+                print(employer)
                 employer_data = {
                     'user_id': user.id,
                     'logo': employer.logo.url,
@@ -589,7 +569,8 @@ class GetUserView(generics.CreateAPIView):
                     "company_vision": employer.company_vision,
                     "map_location": employer.map_location,
                     "phone_number": employer.phone_number,
-                    "email": employer.email
+                    "email": employer.email,
+                    "links": employer.links
                 }
                 return get_response('success', additional={'user': {"user_data": user_data, "employer_data": employer_data}}, status=status.HTTP_200_OK)
             
@@ -616,6 +597,7 @@ class GetUserView(generics.CreateAPIView):
                     "rejection": candidate.rejection,
                     "profile_privacy": candidate.profile_privacy,
                     "resume_privacy": candidate.resume_privacy,
+                    "links": candidate.links
                 }
                 return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
             
