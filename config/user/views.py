@@ -233,7 +233,7 @@ class ChangePasswordView(generics.CreateAPIView):
     serializer_class = ChangePasswordSerializer
     
     def create(self, request):
-        serializer = self.get_serializer()
+        serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
             current_password = request.data['current_password']
