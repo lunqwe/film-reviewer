@@ -615,9 +615,9 @@ class DeleteUserView(generics.CreateAPIView):
             delete_user = serializer.delete_user(request.data)
             
             if not delete_user:
-                return get_response('error', "Error deleting user")
+                return get_response('error', "Error deleting user", status=status.HTTP_400_BAD_REQUEST)
             
-            return Response('success', "User deleted successfully!")
+            return Response('success', "User deleted successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
