@@ -64,7 +64,7 @@ class SendVerificationSerializer(serializers.Serializer):
     user_id = serializers.CharField()
     
     def create(self, data):
-        user = get_object(CustomUser, id=data['user_id'], only_values=('email', 'verified_email'))
+        user = get_object(CustomUser, id=data['user_id'])
         return user
     
 class CheckVerificationSerializer(serializers.Serializer):
