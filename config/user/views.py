@@ -158,7 +158,7 @@ class CheckVerificationView(generics.CreateAPIView):
                 return get_response('error', "Wrong code", status=status.HTTP_401_UNAUTHORIZED)
             
             elif check_verification == 'success':
-                user = get_object(CustomUser, id=request.data['user_id'], only_values=('verified_email'))
+                user = get_object(CustomUser, id=request.data['user_id'])
                 user.verified_email = True
                 user.save()
                 return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
