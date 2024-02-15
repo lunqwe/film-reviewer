@@ -44,21 +44,23 @@ class LoginSerializer(serializers.Serializer):
         email = data.get('email')
         password = data.get('password')
 
-        # Проверяем существование пользователя с данным email
-        user = get_object(CustomUser, email=email)
+        # Проверяем существование пользователя
+        try:
+            user = get_object(CustomUser, email=email)
 
-        if user:
-            # Проверяем валидность пароля
-            if authenticate(request=self.context.get('request'), email=email, password=password):
-                # Если пароль валиден, создаем или получаем токен
-                token, created = Token.objects.get_or_create(user=user)
-                return {'status': 'success', 'token': token.key}
-            else:
-                # Если пароль неверен
-                raise serializers.ValidationError('Invalid password')
-        else:
+            if user:
+                # Проверяем валидность пароля
+                if authenticate(request=self.context.get('request'), email=email, password=password):
+                    # Если пароль валиден, создаем или получаем токен
+                    token, created = Token.objects.get_or_create(user=user)
+                    return {'status': 'success', 'token': token.key}
+                else:
+                    # Если пароль неверен
+                    return {'status': 'error', 'detail': "Invalid password"}
+        except Exception as e:
+            print(e)
             # Если пользователя с таким email не существует
-            raise serializers.ValidationError('Email not registered')
+            return {'status': 'error', 'detail': "Email is not registered."}
     
 class SendVerificationSerializer(serializers.Serializer):
     user_id = serializers.CharField()
