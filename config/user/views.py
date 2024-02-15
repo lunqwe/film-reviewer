@@ -222,9 +222,9 @@ class ResetPasswordView(generics.CreateAPIView):
                 user.save()
                 token_obj.delete()
             else:
-                return get_response('error', "Passwords do not match.")
+                return get_response('error', "Passwords do not match.", status=status.HTTP_401_UNAUTHORIZED)
                 
-            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'})
+            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'}, status=status.HTTP_202_ACCEPTED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -238,17 +238,17 @@ class ChangePasswordView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             current_password = request.data['current_password']
-            user = get_object(CustomUser, id=request.data['user_id']).defer()
+            user = get_object(CustomUser, id=request.data['user_id'])
             
             if user.check_password(current_password):
                 change_password = serializer.change(user, request.data)
 
                 if change_password:
-                    return get_response('success', "Password changed successfully!")       
+                    return get_response('success', "Password changed successfully!", status=status.HTTP_200_OK)       
                 else:
-                    return get_response('error', "new_password1 & new_password2 didnt match.")
+                    return get_response('error', "new_password1 & new_password2 didnt match.", status=status.HTTP_401_UNAUTHORIZED)
             else:
-                return get_response('error', "Wrong current password.") 
+                return get_response('error', "Wrong current password.", status=status.HTTP_401_UNAUTHORIZED) 
             
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -267,9 +267,9 @@ class SaveEmployerView(generics.CreateAPIView):
             employer_created = serializer.update(employer, request.data)
             
             if not employer_created:
-                return get_response('error', "Error creating employer.")
+                return get_response('error', "Error creating employer.", status=status.HTTP_401_UNAUTHORIZED)
             
-            return get_response("success", "Employer created successfully!")
+            return get_response("success", "Employer created successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -547,6 +547,7 @@ class GetUserView(generics.CreateAPIView):
                 raise NotFound("User not found.")
 
             user_data = {
+                'user_id': user.id,
                 'username': user.username,
                 'full_name': user.full_name,
                 'email': user.email,
@@ -558,7 +559,6 @@ class GetUserView(generics.CreateAPIView):
                 employer = get_object(Employer, user=user)
                 print(employer)
                 employer_data = {
-                    'user_id': user.id,
                     'logo': employer.logo.url,
                     "banner": employer.banner.url,
                     "company_name": employer.company_name,
