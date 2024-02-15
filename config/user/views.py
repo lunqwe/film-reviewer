@@ -269,7 +269,7 @@ class SaveEmployerView(generics.CreateAPIView):
             if not employer_created:
                 return get_response('error', "Error creating employer.", status=status.HTTP_401_UNAUTHORIZED)
             
-            return get_response("success", "Employer created successfully!", status=status.HTTP_200_OK)
+            return get_response("success", "Employer created successfully!", status=status.HTTP_202_ACCEPTED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
