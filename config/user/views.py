@@ -107,7 +107,7 @@ class VerifyEmailView(generics.CreateAPIView):
                 if not check_verified:
                     generated_code = random.randint(100000,1000000)
                     try:
-                        verificator = Verificator.objects.filter(user=user).only("code", 'time_created')
+                        verificator = Verificator.objects.filter(user=user)
                         if len(verificator) == 1:
                             verificator = verificator[0]
                             print('get')
@@ -547,6 +547,7 @@ class GetUserView(generics.CreateAPIView):
                 raise NotFound("User not found.")
 
             user_data = {
+                'username': user.username,
                 'full_name': user.full_name,
                 'email': user.email,
                 'status': user.status,
