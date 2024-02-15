@@ -224,7 +224,7 @@ class ResetPasswordView(generics.CreateAPIView):
             else:
                 return get_response('error', "Passwords do not match.", status=status.HTTP_401_UNAUTHORIZED)
                 
-            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'}, status=status.HTTP_202_ACCEPTED)
+            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'}, status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
