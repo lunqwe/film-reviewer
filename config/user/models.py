@@ -70,11 +70,11 @@ class Employer(models.Model):
 class Candidate(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     profile_picture = models.ImageField(default='defaul_icon.png', upload_to='candidate/profile_pics', blank=True, null=True)
-    full_name = models.CharField(max_length=255, default='0')
-    headline = models.CharField(max_length=255, default='0')
-    experiences = models.CharField(max_length=999, default='0')
-    educations = models.CharField(max_length=999, default='0')
-    website = models.CharField(max_length=999, default='0')
+    full_name = models.CharField(max_length=255, default='')
+    headline = models.CharField(max_length=255, default='')
+    experiences = models.CharField(max_length=999, default='')
+    educations = models.CharField(max_length=999, default='')
+    website = models.CharField(max_length=999, default='')
     
     nationality = models.CharField(max_length=255, blank=True, null=True)
     date_of_birth = models.CharField(blank=True, null=True)
