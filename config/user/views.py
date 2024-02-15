@@ -244,7 +244,7 @@ class ChangePasswordView(generics.CreateAPIView):
                 change_password = serializer.change(user, request.data)
 
                 if change_password:
-                    return get_response('success', "Password changed successfully!", status=status.HTTP_200_OK)       
+                    return get_response('success', "Password changed successfully!", status=status.HTTP_202_ACCEPTED)       
                 else:
                     return get_response('error', "new_password1 & new_password2 didnt match.", status=status.HTTP_401_UNAUTHORIZED)
             else:
