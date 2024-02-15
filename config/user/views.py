@@ -184,7 +184,7 @@ class SendResetPassView(generics.CreateAPIView):
                 mail = send_email(user_email=user_data[2], subject='Jobpilot reset password request', email_content=reset_link)
                 if mail:
                     
-                    return get_response('success', 'Password reset link sent.', {'user_id': user_data[0], 'token': user_data[1]}, status=status.HTTP_201_OK)
+                    return get_response('success', 'Password reset link sent.', {'user_id': user_data[0], 'token': user_data[1]}, status=status.HTTP_200_OK)
                 else:
                     
                     return get_response('error', "Error sending email.")
