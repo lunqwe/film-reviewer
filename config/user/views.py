@@ -115,15 +115,15 @@ class VerifyEmailView(generics.CreateAPIView):
                             raise ValueError('User has more than 1 verificator. Code error')
                         
                         elif len(verificator) < 1:
-                            verificator = create_object(Verificator, user=user)
+                            verificator = create_object(Verificator, {"user": user})
                             print('create')
                     except Exception as e:
                         print(e)
                     print(verificator)
                     print(generated_code)
-                    verificator[0].code = str(generated_code)
-                    verificator[0].time_created = timezone.now()
-                    verificator[0].save()
+                    verificator.code = str(generated_code)
+                    verificator.time_created = timezone.now()
+                    verificator.save()
                     
                     mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
                     if mail:
@@ -619,7 +619,7 @@ class DeleteUserView(generics.CreateAPIView):
             if not delete_user:
                 return get_response('error', "Error deleting user", status=status.HTTP_400_BAD_REQUEST)
             
-            return Response('success', "User deleted successfully!", status=status.HTTP_200_OK)
+            return get_response('success', "User deleted successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
