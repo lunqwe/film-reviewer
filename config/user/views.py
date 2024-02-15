@@ -121,9 +121,9 @@ class VerifyEmailView(generics.CreateAPIView):
                         print(e)
                     print(verificator)
                     print(generated_code)
-                    verificator.code = str(generated_code)
-                    verificator.time_created = timezone.now()
-                    verificator.save()
+                    verificator[0].code = str(generated_code)
+                    verificator[0].time_created = timezone.now()
+                    verificator[0].save()
                     
                     mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
                     if mail:
