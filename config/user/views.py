@@ -580,6 +580,7 @@ class GetUserView(generics.CreateAPIView):
             elif user.status == 'candidate':
                 candidate = get_object(Candidate, user=user)
                 candidate_data = {
+                    "profile_picture": candidate.profile_picture.url,
                     "full_name": candidate.full_name,
                     "headline": candidate.headline,
                     "experiences": candidate.experiences,
