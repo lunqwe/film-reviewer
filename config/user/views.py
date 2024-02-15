@@ -35,17 +35,17 @@ class CreateUserView(generics.CreateAPIView):
             password = serializer.validated_data.pop('password')
             user_type = request.data['status']
 
-            user = create_object(CustomUser, **serializer.validated_data)
+            user = create_object(CustomUser, serializer.validated_data)
             print(user)
             user.set_password(password)
             user.save()
             
             if user_type:
                 if user_type == 'candidate':
-                    candidate = create_object(Candidate, user=user)
+                    candidate = create_object(Candidate, {'user': user})
                 
                 elif user_type == 'employer':
-                    employer = create_object(Employer, user=user)
+                    employer = create_object(Employer, {'user': user})
                     
                 else:
                     return get_response('error', "Wrong user status.", status=status.HTTP_400_BAD_REQUEST)
@@ -73,6 +73,7 @@ class CreateUserView(generics.CreateAPIView):
             if password_error:
                 response_data['password'] = password_error
             
+            print(e)
             
             
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)

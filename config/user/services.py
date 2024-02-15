@@ -70,7 +70,8 @@ def error_detail(e):
 
 def change_data(instance, fields_to_update, validated_data):
     for field in fields_to_update:
-        setattr(instance, field, validated_data.get(field, getattr(instance, field)))
+        if validated_data.get(field):
+            setattr(instance, field, validated_data.get(field, getattr(instance, field)))
     instance.save()
     return instance
 
