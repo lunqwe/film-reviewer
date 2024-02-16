@@ -20,7 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['email', 'username', 'full_name', 'password', 'password2', 'status']
-
+        extra_kwargs = {
+            "user_id": {'required': True}
+        }
+        
+        
     def validate(self, data):
         password = data.get('password')
         password2 = data.get('password2')
@@ -143,26 +147,13 @@ class ChangePasswordSerializer(serializers.Serializer):
 class SaveEmployerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employer
-        fields = ['user_id', 'logo', 'banner', 'company_name', 'about',
+        fields = ['logo', 'banner', 'company_name', 'about',
                   'organization_type', 'industry_types', 'team_size',
                   'website', 'year_of_establishment', 'company_vision',
                   'map_location', 'phone_number', 'links']
         
         extra_kwargs = {
-            'logo': {'required': False},
-            'banner': {'required': False},
-            'company_name': {'required': False},
-            'about': {'required': False},
-            'organization_type': {'required': False},
-            'industry_types': {'required': False},
-            'team_size': {'required': False},
-            'website': {'required': False},
-            'year_of_establishment': {'required': False},
-            'company_vision': {'required': False},
-            'map_location': {'required': False},
-            'phone_number': {'required': False},
-            'links': {'required': False},
-            
+            "user_id": {'required': True}
         }
 
     def update(self, instance, validated_data):
@@ -186,10 +177,7 @@ class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
         fields = ['logo', 'banner', 'company_name', 'about']
         
         extra_kwargs = {
-            'logo': {'required': False},
-            'banner': {'required': False},
-            'company_name': {'required': False},
-            'about' : {'required': False}
+            "user_id": {'required': True}
         }
         
     
@@ -207,12 +195,7 @@ class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
         fields = ['organization_type', 'industry_types', 'team_size', 'year_of_establishment', 'website', 'company_vision']
         
         extra_kwargs = {
-            'organization_type': {'required': False},
-            'industry_types': {'required': False},
-            'team_size': {'required': False},
-            'year_of_establishment': {'required': False},
-            'website': {'required': False},
-            'company_vision': {'required': False}
+            "user_id": {'required': True}
         }
         
     def change_founding(self, instance,  validated_data):
@@ -236,9 +219,8 @@ class ChangeEmployerContactSerializer(serializers.ModelSerializer):
         model = Employer
         fields = ['map_location', 'phone_number', 'email']
         extra_kwargs = {
-            'map_location': {'required': False},
-            'phone_number': {'required': False},
-            'email': {'required': False}
+            "user_id": {'required': True},
+
         }
         
     def change(self, instance, data):
@@ -254,13 +236,7 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
         model = Candidate
         fields = ['profile_picture', 'full_name', 'headline', 'educations','experiences', 'website']
         extra_kwargs = {
-            'user_id': {'required': True},
-            'profile_picture': {'required': False},
-            'full_name': {'required': False},
-            'headline': {'required': False},
-            'experiences': {'required': False},
-            'educations': {'required': False},
-            'website': {'required': False}
+            'user_id': {'required': True}
         }
 
     def update(self, instance, validated_data):
@@ -314,11 +290,6 @@ class ChangeCandidateProfileSerializer(serializers.ModelSerializer):
         
         extra_kwargs = {
             'user_id': {'required': True},
-            'nationality': {'required': False},
-            'date_of_birth': {'required': False},
-            'gender': {'required': False},
-            'marital_status': {'required': False},
-            'biography': {'required': False}
         }
         
     def change_profile(self, candidate, data):
@@ -332,7 +303,6 @@ class CandidateSocialLinksSerializer(serializers.ModelSerializer):
         fields = ['links']
         extra_kwargs = {
             'user_id': {'required': True},
-            'links': {'required': False}
         }
         
     def change_links(self, candidate, data):
@@ -346,9 +316,6 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
         fields = ['map_location', 'phone_number', "email"]
         extra_kwargs = {
             'user_id': {'required': True},
-            'map_location': {'required': False},
-            'phone_number': {'required': False},
-            'email': {'required': False},
         }
         
     def change_settings(self, instance, data):
