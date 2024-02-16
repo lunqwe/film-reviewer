@@ -261,7 +261,7 @@ class CreateResumeSerializer(serializers.ModelSerializer):
 class ChangeResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
-        fields = ['title', 'file']
+        fields = ['file']
         extra_kwargs = {
             'resume_id': {'required': True},
         }
