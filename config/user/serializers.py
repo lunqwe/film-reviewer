@@ -249,7 +249,7 @@ class CreateResumeSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ResumeFile
-        fields = ['title', 'file']
+        fields = ['title', 'file', 'size']
         
     def create(self, instance, data):
         resume = ResumeFile.objects.create(candidate=instance, **data)

@@ -112,6 +112,7 @@ class CandidateJobAlertNotification(models.Model):
 class ResumeFile(models.Model):
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
+    size = models.CharField(max_length=255, default='')
     file = models.FileField(upload_to='candidate/resumes', blank=True, null=True)
     
     
