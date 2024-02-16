@@ -579,6 +579,7 @@ class GetUserView(generics.CreateAPIView):
             
             elif user.status == 'candidate':
                 candidate = get_object(Candidate, user=user)
+                resume_files = ResumeFile.objects.filter(candidate=candidate)
                 candidate_data = {
                     "profile_picture": candidate.profile_picture.url,
                     "full_name": candidate.full_name,
@@ -600,7 +601,8 @@ class GetUserView(generics.CreateAPIView):
                     "rejection": candidate.rejection,
                     "profile_privacy": candidate.profile_privacy,
                     "resume_privacy": candidate.resume_privacy,
-                    "links": candidate.links
+                    "links": candidate.links,
+                    "resume_files": [{resume.title, resume.file.url} for resume in resume_files]
                 }
                 return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
             
