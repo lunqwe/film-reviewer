@@ -388,7 +388,8 @@ class CreateResumeView(generics.CreateAPIView):
             
             user = get_object(CustomUser, id=request.data['user_id'])
             candidate = get_object(Candidate, user=user)
-            resume = create_object(ResumeFile, {'candidate': candidate})
+            new_data = {'title': request.data['title'], 'file': request.data['file']}
+            resume = serializer.create(candidate, new_data)
             
             if not resume:
                 return get_response('error', "Error creating resume", status=status.HTTP_400_BAD_REQUEST)

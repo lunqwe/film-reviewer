@@ -8,6 +8,7 @@ from rest_framework import status
 
 def create_object(model_class, data_dict):
     try:
+        print(data_dict)
         model_instance = model_class.objects.create(**data_dict)
         print(model_instance)
         return model_instance

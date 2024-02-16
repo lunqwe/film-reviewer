@@ -250,12 +250,11 @@ class CreateResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
         fields = ['title', 'file']
-        extra_kwargs = {
-            'user_id': {'required': True},
-        }
         
     def create(self, instance, data):
-        return create_object(instance, data)
+        resume = ResumeFile.objects.create(candidate=instance, **data)
+        return resume
+        
     
     
 
