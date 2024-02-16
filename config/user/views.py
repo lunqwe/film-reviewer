@@ -603,7 +603,7 @@ class GetUserView(generics.CreateAPIView):
                     "profile_privacy": candidate.profile_privacy,
                     "resume_privacy": candidate.resume_privacy,
                     "links": candidate.links,
-                    "resume_files": [{'id': resume.id, 'size': resume.file.size, 'title': resume.title, 'file':resume.file.url} for resume in resume_files]
+                    "resume_files": [{'resume_id': resume.id, 'size': resume.file.size, 'title': resume.title, 'file':resume.file.url} for resume in resume_files]
                 }
                 return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
             
