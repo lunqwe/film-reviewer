@@ -274,7 +274,9 @@ class ChangeResumeSerializer(serializers.ModelSerializer):
 class DeleteResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
-        fields = ['resume_id']
+        extra_kwargs = {
+            'resume_id': {'required': True}
+        }
     
     def delete_resume(self, instance):
         instance.delete()
