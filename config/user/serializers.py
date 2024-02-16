@@ -274,7 +274,7 @@ class ChangeResumeSerializer(serializers.ModelSerializer):
 class DeleteResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResumeFile
-        fields = ['id']
+        fields = ['resume_id']
     
     def delete_resume(self, instance):
         instance.delete()
