@@ -268,6 +268,7 @@ class ChangeResumeSerializer(serializers.ModelSerializer):
     
     def change(self, instance, validated_data):
         fields_to_update = ['title', 'file']
+        instance.file.delete()
         return change_data(instance, fields_to_update, validated_data)
         
         
