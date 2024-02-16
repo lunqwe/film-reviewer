@@ -328,11 +328,6 @@ class ChangeCandidateNotificationsSerializer(serializers.ModelSerializer):
         fields = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
         extra_kwargs = {
             'user_id': {'required': True},
-            "shortlist": {'required': False},
-            "expire": {'required': False},
-            "five_job_alerts": {'required': False},
-            "profile_saved": {'required': False},
-            "rejection": {'required': False},
             #add job alerts here
         }
     def change_settings(self, instance, data):
@@ -347,8 +342,6 @@ class ChangeCandidatePrivacySerializer(serializers.ModelSerializer):
         model = Candidate
         fields = ["profile_privacy", "resume_privacy"]
         extra_kwargs = {
-            "profile_privacy": {'required': False},
-            "resume_privacy": {'required': False},
         }
         
     def change_settings(self, instance, data):
