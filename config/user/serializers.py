@@ -280,6 +280,7 @@ class DeleteResumeSerializer(serializers.ModelSerializer):
         }
     
     def delete_resume(self, instance):
+        instance.file.delete()
         instance.delete()
         return True
         
