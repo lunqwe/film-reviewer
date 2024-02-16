@@ -119,11 +119,9 @@ class SendResetPassView(generics.CreateAPIView):
             if user_data:
                 mail = send_email(user_email=user_data[2], subject='Jobpilot reset password request', email_content=reset_link)
                 if mail:
-                    
                     return get_response('success', 'Password reset link sent.', {'user_id': user_data[0], 'token': user_data[1]}, status=status.HTTP_200_OK)
                 else:
-                    
-                    return get_response('error', "Error sending email.", status=status.HTTP_400_BAD_REQUEST)
+                    return get_response('error', "Error sending email. (401 Unauthorized)", status=status.HTTP_401_UNAUTHORIZED)
             else:
                 return get_response('error', 'Error creating password reset link: user not found.', status=status.HTTP_400_BAD_REQUEST)
             
@@ -157,12 +155,7 @@ class ChangePasswordView(generics.CreateAPIView):
             user = get_object(CustomUser, id=request.data['user_id'])
             
             if user.check_password(current_password):
-                change_password = serializer.change(user, request.data)
-
-                if change_password:
-                    return get_response('success', "Password changed successfully!", status=status.HTTP_202_ACCEPTED)       
-                else:
-                    return get_response('error', "new_password1 & new_password2 didnt match.", status=status.HTTP_401_UNAUTHORIZED)
+                return change_password(user, request.data)
             else:
                 return get_response('error', "Wrong current password.", status=status.HTTP_401_UNAUTHORIZED) 
             
@@ -179,7 +172,7 @@ class SaveEmployerView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             
             user = CustomUser.objects.get(id=request.data['user_id'])
-            employer = Employer.objects.create(user=user)
+            employer = Employer.objects.get(user=user)
             employer_created = serializer.update(employer, request.data)
             
             if not employer_created:
@@ -463,65 +456,7 @@ class GetUserView(generics.CreateAPIView):
             if not user:
                 raise NotFound("User not found.")
 
-            user_data = {
-                'user_id': user.id,
-                'username': user.username,
-                'full_name': user.full_name,
-                'email': user.email,
-                'status': user.status,
-                'verified_email': user.verified_email
-            }
-
-            if user.status == 'employer':
-                employer = get_object(Employer, user=user)
-                print(employer)
-                employer_data = {
-                    'logo': employer.logo.url,
-                    "banner": employer.banner.url,
-                    "company_name": employer.company_name,
-                    "about": employer.about,
-                    "organization_type": employer.organization_type,
-                    "industry_types": employer.industry_types,
-                    "team_size": employer.team_size,
-                    "website": employer.website,
-                    "year_of_establishment": employer.year_of_establishment,
-                    "company_vision": employer.company_vision,
-                    "map_location": employer.map_location,
-                    "phone_number": employer.phone_number,
-                    "email": employer.email,
-                    "links": employer.links
-                }
-                return get_response('success', additional={'user': {"user_data": user_data, "employer_data": employer_data}}, status=status.HTTP_200_OK)
-            
-            
-            elif user.status == 'candidate':
-                candidate = get_object(Candidate, user=user)
-                resume_files = ResumeFile.objects.filter(candidate=candidate)
-                candidate_data = {
-                    "profile_picture": candidate.profile_picture.url,
-                    "full_name": candidate.full_name,
-                    "headline": candidate.headline,
-                    "experiences": candidate.experiences,
-                    "educations": candidate.educations,
-                    "website": candidate.website,
-                    "nationality": candidate.nationality,
-                    "date_of_birth": candidate.date_of_birth,
-                    "gender": candidate.gender,
-                    'marital_status': candidate.marital_status,
-                    "biography": candidate.biography,
-                    "map_location": candidate.map_location,
-                    "phone_number": candidate.phone_number,
-                    "shortlist": candidate.shortlist,
-                    "expire": candidate.expire,
-                    "five_job_alerts": candidate.five_job_alerts,
-                    "profile_saved": candidate.profile_saved,
-                    "rejection": candidate.rejection,
-                    "profile_privacy": candidate.profile_privacy,
-                    "resume_privacy": candidate.resume_privacy,
-                    "links": candidate.links,
-                    "resume_files": [{'resume_id': resume.id, 'size': resume.file.size, 'title': resume.title, 'file':resume.file.url} for resume in resume_files]
-                }
-                return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
+            return get_user(user)
             
         except serializers.ValidationError as e:
             return error_detail(e)
