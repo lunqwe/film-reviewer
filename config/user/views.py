@@ -430,9 +430,9 @@ class DeleteResumeView(generics.CreateAPIView):
             resume = get_object(ResumeFile, id=request.data['resume_id'])
             resume_deleted = serializer.delete_resume(resume)
             if not resume_deleted:
-                return get_response("error", "Error deleting resume")
+                return get_response("error", "Error deleting resume", status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response("success", "Resume deleted successfully!")
+            return get_response("success", "Resume deleted successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
