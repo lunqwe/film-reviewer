@@ -1,87 +1,63 @@
-from .models import CustomUser, Employer, Candidate
+from .models import CustomUser, Employer, Candidate, Verificator
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 import os
+from django.contrib.auth import authenticate
+from django.utils import timezone
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from rest_framework import status
+from common.services import *
+import random
 
-
-def create_object(model_class, data_dict):
-    try:
-        print(data_dict)
-        model_instance = model_class.objects.create(**data_dict)
-        print(model_instance)
-        return model_instance
-    
-    except Exception as e:
-        print(f"Error creating object: {e}")
-        return None
-
-
-def get_object(model, **kwargs):
-    try:
-        model = model.objects.get(**kwargs)
-        return model
-    except Exception as e:
-        print(e)
-        raise ValueError(e)
-    
-    
-def send_email(user_email, subject, email_content):
-    try:
-        sg = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY') )
-        message = Mail(
-                    from_email=From('jobpilot@ukr.net', 'Jobpilot'),
-                    to_emails=user_email,
-                    subject=subject,
-                    plain_text_content=email_content
-                )
-
-        response = sg.send(message)
-        return response
-    except Exception as e:
-        print("Error while sending email")
-        print(e)
-        return False
-    
-
-def get_response(response_status, detail=(), additional: dict=(),  status=()):
-    response_dict = {}
-    if response_status:
-        response_dict['status'] = response_status
-    if detail:
-        response_dict['detail'] = detail
-    if additional:
-        for key, value in additional.items():
-            response_dict[key] = value  
-            
-    
-            
-    return Response(response_dict, status)
-
-def error_detail(e):
-    errors = e.detail
-    
-    error_messages = {}
-    for field, messages in errors.items():
-        error_messages[field] = messages[0].__str__()
-
-    
-    return get_response('error', additional={'detail': error_messages}, status=status.HTTP_400_BAD_REQUEST)
-
-def change_data(instance, fields_to_update, validated_data):
-    for field in fields_to_update:
-        if validated_data.get(field):
-            setattr(instance, field, validated_data.get(field, getattr(instance, field)))
-    instance.save()
-    return instance
 
 def create_user(validated_data):
     password = validated_data.pop('password2')        
     
-    user = create_object(CustomUser, **validated_data)
+    user = create_object(CustomUser, validated_data)
     user.set_password(password)
     user.save()
     
-    return user
+    accout_type = validated_data['status']
+    if accout_type == 'employer':
+        create_object(Employer, {'user': user})
+    elif accout_type == 'candidate':
+        create_object(Candidate, {'user': user})
+    else:
+        return get_response('error', "Wrong user status.", status=status.HTTP_400_BAD_REQUEST)
 
+    return get_response('success', 'User created successfully!', {'id': user.id}, status=status.HTTP_201_CREATED)
+    
+
+def login_user(request, user, email, password):
+    if authenticate(request=request, email=email, password=password):
+                    # Если пароль валиден, создаем или получаем токен
+        token, created = Token.objects.get_or_create(user=user)
+        return {'status': 'success', 'token': token.key}
+    else:
+                    # Если пароль неверен
+        return {'status': 'error', 'detail': "Invalid password"}
+
+def send_verification(user):
+    generated_code = random.randint(100000,1000000)
+    try:
+        verificator = Verificator.objects.filter(user=user)
+        if len(verificator) == 1:
+            verificator = verificator[0]
+        elif len(verificator) > 1:
+            raise ValueError('User has more than 1 verificator. Code error')
+                        
+        elif len(verificator) < 1:
+            verificator = create_object(Verificator, {"user": user})
+            print('create')
+    except Exception as e:
+        print(e)
+    verificator.code = str(generated_code)
+    verificator.time_created = timezone.now()
+    verificator.save()
+                    
+    mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
+    if mail:
+        return get_response('success', 'Verification message sent!', status=status.HTTP_201_CREATED)
+    else:
+        return get_response('error', 'Failed to send email. (401 Unauthorized) ', status=status.HTTP_408_REQUEST_TIMEOUT)

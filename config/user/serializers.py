@@ -9,11 +9,12 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from .models import CustomUser, Verificator, Employer, Candidate, ResumeFile
-from .services import get_object, change_data, create_user, create_object
+from common.services import *
+from .services import *
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
 
@@ -47,20 +48,13 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get('email')
         password = data.get('password')
-
+        
         # Проверяем существование пользователя
         try:
             user = get_object(CustomUser, email=email)
-
+            request = self.context.get('request')
             if user:
-                # Проверяем валидность пароля
-                if authenticate(request=self.context.get('request'), email=email, password=password):
-                    # Если пароль валиден, создаем или получаем токен
-                    token, created = Token.objects.get_or_create(user=user)
-                    return {'status': 'success', 'token': token.key}
-                else:
-                    # Если пароль неверен
-                    return {'status': 'error', 'detail': "Invalid password"}
+                return login_user(request, user, email, password)
         except Exception as e:
             print(e)
             # Если пользователя с таким email не существует

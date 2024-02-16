@@ -17,7 +17,8 @@ import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 from .serializers import *
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
-from .services import get_object, send_email, create_object, get_response, error_detail
+from common.services import *
+from .services import *
 
 
 
@@ -26,34 +27,13 @@ config = AutoConfig()
 
 
 class CreateUserView(generics.CreateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = CreateUserSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            password = serializer.validated_data.pop('password')
-            user_type = request.data['status']
-
-            user = create_object(CustomUser, serializer.validated_data)
-            print(user)
-            user.set_password(password)
-            user.save()
-            
-            if user_type:
-                if user_type == 'candidate':
-                    candidate = create_object(Candidate, {'user': user})
-                
-                elif user_type == 'employer':
-                    employer = create_object(Employer, {'user': user})
-                    
-                else:
-                    return get_response('error', "Wrong user status.", status=status.HTTP_400_BAD_REQUEST)
-                    
-            else:
-                return get_response('error', 'User status specification required.', status=status.HTTP_400_BAD_REQUEST)
-
-            return get_response('success', "User created successfully!", {'id': user.id}, status=status.HTTP_201_CREATED)
+            return create_user(request.data)
         
         except serializers.ValidationError as e:
             errors = e.detail
@@ -74,8 +54,6 @@ class CreateUserView(generics.CreateAPIView):
                 response_data['password'] = password_error
             
             print(e)
-            
-            
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -105,31 +83,7 @@ class VerifyEmailView(generics.CreateAPIView):
             
             if user:
                 if not check_verified:
-                    generated_code = random.randint(100000,1000000)
-                    try:
-                        verificator = Verificator.objects.filter(user=user)
-                        if len(verificator) == 1:
-                            verificator = verificator[0]
-                            print('get')
-                        elif len(verificator) > 1:
-                            raise ValueError('User has more than 1 verificator. Code error')
-                        
-                        elif len(verificator) < 1:
-                            verificator = create_object(Verificator, {"user": user})
-                            print('create')
-                    except Exception as e:
-                        print(e)
-                    print(verificator)
-                    print(generated_code)
-                    verificator.code = str(generated_code)
-                    verificator.time_created = timezone.now()
-                    verificator.save()
-                    
-                    mail = send_email(user_email=user.email, subject='Jobpilot email verification', email_content=str(generated_code))
-                    if mail:
-                        return get_response('success', 'Verification message sent!', status=status.HTTP_201_CREATED)
-                    else:
-                        return get_response('error', 'Failed to send email. (401 Unauthorized) ', status=status.HTTP_408_REQUEST_TIMEOUT)
+                    return send_verification(user)
                 else:
                     return get_response('error', "User is already verified.", status=status.HTTP_400_BAD_REQUEST)
             else:
