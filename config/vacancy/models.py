@@ -3,21 +3,21 @@ from django.db import models
 # Create your models here.
 class Vacancy(models.Model):
     author = models.ForeignKey('user.Employer', on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default='')
     tags = models.JSONField(default=list)
     
     #salery
-    min_salery = models.CharField(max_length=255)
-    max_salery = models.CharField(max_length=255)
-    salery_type = models.CharField(max_length=255)
+    min_salery = models.CharField(max_length=255, default='')
+    max_salery = models.CharField(max_length=255, default='')
+    salery_type = models.CharField(max_length=255, default='')
     
     #advance info
-    education = models.CharField(max_length=255)
-    experience = models.CharField(max_length=255)
-    job_type = models.CharField(max_length=255)
-    vanancies = models.CharField(max_length=255)
-    expiration_date = models.CharField(max_length=255)
-    job_level = models.CharField(max_length=255)
+    education = models.CharField(max_length=255, default='')
+    experience = models.CharField(max_length=255, default='')
+    job_type = models.CharField(max_length=255, default='')
+    vaсancies = models.CharField(max_length=255, default='')
+    expiration_date = models.CharField(max_length=255, default='')
+    job_level = models.CharField(max_length=255, default='')
     
     #description and responsibility 
     description = models.TextField()

@@ -9,11 +9,14 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from .models import Vacancy
+from .services import *
+from common.services import *
 
 
-class CreateVanancySerializer(serializers.ModelSerializer):
+class CreateVacancySerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacancy
-        fields = [
-            ''
-            ]
+        fields = ['title', 'tags', 'min_salery', 'max_salery', 'salery_type', 'education', 'experience', 'job_type', 'vaсancies', 'expiration_date', 'job_level', 'description', 'responsibilities']
+        
+    def create(self, data):
+        return create_object(Vacancy, data)

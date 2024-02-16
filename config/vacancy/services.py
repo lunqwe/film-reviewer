@@ -1,4 +1,3 @@
-from .models import CustomUser, Employer, Candidate
 import sendgrid
 from sendgrid.helpers.mail import Mail, From, To
 import os

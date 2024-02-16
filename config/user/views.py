@@ -361,7 +361,7 @@ class ChangeCandidateProfileView(generics.CreateAPIView):
             if not change_personal:
                 return get_response('error', "Failed to change profile candidate data.")
             
-            return get_response('success', 'Candidate`s profile data changed successfully!',status=status.HTTP_201_CREATED)
+            return get_response('success', 'Candidate`s profile data changed successfully!', status=status.HTTP_201_CREATED)
         
         except serializers.ValidationError as e:
             return error_detail(e)

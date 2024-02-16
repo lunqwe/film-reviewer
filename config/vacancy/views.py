@@ -10,11 +10,24 @@ from django.forms.models import model_to_dict
 from rest_framework.authtoken.models import Token
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
+from .serializers import *
 from .models import Vacancy
-from .serializers import CreateVanancySerializer
+from .services import *
+from common.services import *
 
-class CreateVacancy(generics.CreateAPIView):
-    serializer_class = CreateVanancySerializer
+class CreateVacancyView(generics.CreateAPIView):
+    serializer_class = CreateVacancySerializer
     
-    def create(self, *args, **kwargs):
-        pass
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        try: 
+            serializer.is_valid(raise_exception=True)
+            try:
+                serializer.create(request.data)
+                return get_response('success', 'Vacancy created successfully!', status=status.HTTP_201_CREATED)
+            except Exception as e:
+                print(e)
+                return get_response('error', f'Error creating vacancy. ({e})', status=status.HTTP_400_BAD_REQUEST)
+            
+        except serializers.ValidationError as e:
+            return error_detail(e) 
