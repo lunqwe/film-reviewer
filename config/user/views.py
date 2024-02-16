@@ -100,25 +100,7 @@ class CheckVerificationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            check_verification = serializer.verificate(request.data)
-            
-            if check_verification == 'already_verified':
-                return get_response('error', 'User email is already verified.', status=status.HTTP_400_BAD_REQUEST)
-
-            if check_verification == 'expired':
-                return get_response('error', 'Verification code expired.', status=status.HTTP_408_REQUEST_TIMEOUT)
-            
-            elif check_verification == 'wrong_code':
-                return get_response('error', "Wrong code", status=status.HTTP_401_UNAUTHORIZED)
-            
-            elif check_verification == 'success':
-                user = get_object(CustomUser, id=request.data['user_id'])
-                user.verified_email = True
-                user.save()
-                return get_response('success', 'Verificated successfully!', status=status.HTTP_201_CREATED)
-            
-            else:
-                return get_response('error', 'Verificator never existed.', status=status.HTTP_400_BAD_REQUEST)
+            return check_verification(request.data)
             
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -130,8 +112,8 @@ class SendResetPassView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         try:
-            user_data = serializer.validate(request.data)
             serializer.is_valid(raise_exception=True)
+            user_data = serializer.validate(request.data)
             
             reset_link = f'http://localhost:3000/reset-password/{user_data[0]}/{user_data[1]}'
             if user_data:
@@ -141,9 +123,9 @@ class SendResetPassView(generics.CreateAPIView):
                     return get_response('success', 'Password reset link sent.', {'user_id': user_data[0], 'token': user_data[1]}, status=status.HTTP_200_OK)
                 else:
                     
-                    return get_response('error', "Error sending email.")
+                    return get_response('error', "Error sending email.", status=status.HTTP_400_BAD_REQUEST)
             else:
-                return get_response('error', 'Error creating password reset link: user not found.')
+                return get_response('error', 'Error creating password reset link: user not found.', status=status.HTTP_400_BAD_REQUEST)
             
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -157,28 +139,8 @@ class ResetPasswordView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            uidb64 = request.data['uid_64']
-            token_key = request.data['token']
-
             password = serializer.validate(request.data)
-            user_id = urlsafe_base64_decode(uidb64).decode('utf-8')
-            try:
-                user = get_object(CustomUser, id=user_id)
-            except:
-                return get_response('error', 'User not found.', status=status.HTTP_401_UNAUTHORIZED)
-            try:
-                token_obj = get_object(Token, key=token_key)
-            except:
-                return get_response('error', 'Token not found.', status=status.HTTP_404_NOT_FOUND)
-            
-            if password:
-                user.set_password(password)
-                user.save()
-                token_obj.delete()
-            else:
-                return get_response('error', "Passwords do not match.", status=status.HTTP_401_UNAUTHORIZED)
-                
-            return get_response('success', 'Password changed successfully!', {'note': 'You must relogin'}, status=status.HTTP_200_OK)
+            return reset_password(request, password)
         
         except serializers.ValidationError as e:
             return error_detail(e)
