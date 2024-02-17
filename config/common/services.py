@@ -3,13 +3,12 @@ from sendgrid.helpers.mail import Mail, From, To
 import os
 from rest_framework.response import Response
 from rest_framework import status
+from user.models import CustomUser
 
 
 def create_object(model_class, data_dict):
     try:
-        print(data_dict)
         model_instance = model_class.objects.create(**data_dict)
-        print(model_instance)
         return model_instance
     
     except Exception as e:
@@ -24,6 +23,9 @@ def get_object(model, **kwargs):
     except Exception as e:
         print(e)
         raise ValueError(e)
+    
+def get_user(id):
+    return get_object(CustomUser, id=id)
     
     
 def send_email(user_email, subject, email_content):
@@ -58,13 +60,13 @@ def get_response(response_status, detail=(), additional: dict=(),  status=()):
             
     return Response(response_dict, status)
 
+
 def error_detail(e):
     errors = e.detail
     
     error_messages = {}
     for field, messages in errors.items():
         error_messages[field] = messages[0].__str__()
-
     
     return get_response('error', additional={'detail': error_messages}, status=status.HTTP_400_BAD_REQUEST)
 

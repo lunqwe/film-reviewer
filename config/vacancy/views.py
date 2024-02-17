@@ -14,6 +14,7 @@ from .serializers import *
 from .models import Vacancy
 from .services import *
 from common.services import *
+from user.models import CustomUser, Employer, Candidate
 
 class CreateVacancyView(generics.CreateAPIView):
     serializer_class = CreateVacancySerializer
@@ -23,11 +24,11 @@ class CreateVacancyView(generics.CreateAPIView):
         try: 
             serializer.is_valid(raise_exception=True)
             try:
-                serializer.create(request.data)
-                return get_response('success', 'Vacancy created successfully!', status=status.HTTP_201_CREATED)
+                return create_vacancy(request.data)
             except Exception as e:
                 print(e)
-                return get_response('error', f'Error creating vacancy. ({e})', status=status.HTTP_400_BAD_REQUEST)
+                return get_response('error', f'Error creating vacancy ({e})', status=status.HTTP_400_BAD_REQUEST)
             
         except serializers.ValidationError as e:
             return error_detail(e) 
+        

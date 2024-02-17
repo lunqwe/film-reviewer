@@ -20,8 +20,8 @@ class Vacancy(models.Model):
     job_level = models.CharField(max_length=255, default='')
     
     #description and responsibility 
-    description = models.TextField()
-    responsibilities = models.TextField()
+    description = models.TextField(default='')
+    responsibilities = models.TextField(default='')
     
     def __str__(self):
         return f'{self.title}({self.author.user.username})'
