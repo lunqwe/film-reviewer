@@ -9,8 +9,7 @@ from .models import Vacancy
 
 
 def create_vacancy(data):
-    user = get_user(data['user_id'])
-    employer = get_object(Employer, user=user)
+    employer =  get_obj_by_user_id(Employer, data['user_id'])
     data['author'] = employer
     del data['user_id']
     create_object(Vacancy, data)

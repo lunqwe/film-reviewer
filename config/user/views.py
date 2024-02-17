@@ -171,8 +171,7 @@ class SaveEmployerView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = CustomUser.objects.get(id=request.data['user_id'])
-            employer = Employer.objects.get(user=user)
+            employer = get_obj_by_user_id(Employer, request.data['user_id'])
             employer_created = serializer.update(employer, request.data)
             
             if not employer_created:
@@ -192,8 +191,7 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'], defer=())
-            employer = get_object(Employer, user=user)
+            employer = get_obj_by_user_id(Employer, request.data['user_id'])
             employer_changed = serializer.update(employer, request.data)
             
             if not employer_changed:
@@ -213,8 +211,7 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
-            employer = get_object(Employer, user=user)
+            employer = get_obj_by_user_id(Employer, request.data['user_id'])
             employer_changed = serializer.change_founding(employer, request.data)
             
             if not employer_changed:
@@ -232,8 +229,8 @@ class EmployerSocialLinksView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            user = get_object(CustomUser, id=request.data['user_id'])
-            employer = get_object(Employer, user=user)
+            
+            employer = get_obj_by_user_id(Employer, request.data['user_id'])
             links_created = serializer.change_links(employer, request.data)
             
             if not links_created:
@@ -252,8 +249,8 @@ class ChangeEmployerContactView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            user = get_object(CustomUser, id=request.data['user_id'])
-            employer = get_object(Employer, user=user)
+            
+            employer = get_obj_by_user_id(Employer, request.data['user_id'])
             employer_changed = serializer.change(employer, request.data)
             
             if not employer_changed:
@@ -274,8 +271,7 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate_obj = get_object(Candidate, user=user)
+            candidate_obj = get_obj_by_user_id(Candidate, request.data['user_id'])
             candidate = serializer.update(candidate_obj, request.data)
             
             if not candidate:
@@ -295,8 +291,7 @@ class CreateResumeView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             new_data = {'title': request.data['title'], 'file': request.data['file']}
             resume = serializer.create(candidate, new_data)
             
@@ -354,8 +349,7 @@ class ChangeCandidateProfileView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             change_personal = serializer.change_profile(candidate, request.data)
             
             if not change_personal:
@@ -374,8 +368,7 @@ class CandidateSocialLinksView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             changed_links = serializer.change_links(candidate, request.data)
             
             if not changed_links:
@@ -395,8 +388,8 @@ class ChangeCandidateAccountSettingsView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
@@ -414,8 +407,8 @@ class ChangeCandidateNotificationsAndAlertsView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
@@ -432,8 +425,8 @@ class ChangeCandidatePrivacyView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            user = get_object(CustomUser, id=request.data['user_id'])
-            candidate = get_object(Candidate, user=user)
+            
+            candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:

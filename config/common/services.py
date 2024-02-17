@@ -26,6 +26,10 @@ def get_object(model, **kwargs):
     
 def get_user(id):
     return get_object(CustomUser, id=id)
+
+def get_obj_by_user_id(model, user_id):
+    user = get_object(CustomUser, id=user_id)
+    return get_object(model, user=user)
     
     
 def send_email(user_email, subject, email_content):
