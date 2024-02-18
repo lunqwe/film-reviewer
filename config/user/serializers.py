@@ -235,8 +235,10 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         fields_to_update = ['profile_picture', 'full_name', 'headline', 'educations', 'experiences', 'website']
-        if type(validated_data['profile_picture']) == str:
-            fields_to_update.remove('profile_picture')
+        if 'profile_picture' in validated_data and isinstance(validated_data['profile_picture'], str):
+            # Ничего не меняем, так как это URL
+            validated_data.pop('profile_picture')
+            fields_to_update.remove("profile_picture")
         data = change_data(instance, fields_to_update, validated_data)
         return data
             
