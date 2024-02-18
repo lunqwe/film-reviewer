@@ -268,12 +268,10 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
+            
+        candidate_obj = get_obj_by_user_id(Candidate, request.data['user_id'])
         try:
-            serializer.is_valid(raise_exception=True)
-            
-            candidate_obj = get_obj_by_user_id(Candidate, request.data['user_id'])
             candidate = serializer.update(candidate_obj, request.data)
-            
             if not candidate:
                 return get_response('error', "Error updating candidate.")
             
