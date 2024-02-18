@@ -330,7 +330,7 @@ class ChangeResumeView(generics.CreateAPIView):
             if not resume_changed:
                 return get_response('error', 'Error changing resume', status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', 'Resume file changed successfully!', status=status.HTTP_200_OK)
+            return get_response('success', 'Resume file changed successfully!', {'file_url': resume.file.url}, status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
