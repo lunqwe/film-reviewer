@@ -239,8 +239,7 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
             # Ничего не меняем, так как это URL
             validated_data.pop('profile_picture')
             fields_to_update.remove("profile_picture")
-        data = change_data(instance, fields_to_update, validated_data)
-        return data
+        return super().update(instance, validated_data)
             
         
 class CreateResumeSerializer(serializers.ModelSerializer):
