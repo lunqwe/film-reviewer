@@ -68,9 +68,9 @@ def get_response(response_status, detail=(), additional: dict=(),  status=()):
 def error_detail(e):
     errors = e.detail
     
-    error_messages = {}
+    error_messages = []
     for field, messages in errors.items():
-        error_messages[field] = messages[0].__str__()
+        error_messages.append(f'{field}: {messages[0].__str__()}')
     
     return get_response('error', additional={'detail': error_messages[0]}, status=status.HTTP_400_BAD_REQUEST)
 
