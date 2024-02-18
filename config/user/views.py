@@ -298,7 +298,7 @@ class CreateResumeView(generics.CreateAPIView):
             if not resume:
                 return get_response('error', "Error creating resume", status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response("success", "Resume created successfully!", {'resume_id': resume.id}, status=status.HTTP_200_OK)
+            return get_response("success", "Resume created successfully!", {'resume_id': resume.id, 'title': resume.title, 'file': resume.file.url}, status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)

@@ -72,7 +72,7 @@ def error_detail(e):
     for field, messages in errors.items():
         error_messages[field] = messages[0].__str__()
     
-    return get_response('error', additional={'detail': error_messages}, status=status.HTTP_400_BAD_REQUEST)
+    return get_response('error', additional={'detail': error_messages[0]}, status=status.HTTP_400_BAD_REQUEST)
 
 def change_data(instance, fields_to_update, validated_data):
     for field in fields_to_update:
