@@ -234,6 +234,11 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
             'profile_picture': {'required': False}
         }
 
+    def validate(self, data):
+        if 'profile_picture' in data and isinstance(data['profile_picture'], str):
+            data.pop('profile_picture')
+        return data
+    
     def update(self, instance, validated_data: dict):
         fields_to_update = validated_data.keys()
         data = change_data(instance, fields_to_update, validated_data)
