@@ -439,6 +439,7 @@ class ChangeCandidatePrivacyView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             
             candidate = get_obj_by_user_id(Candidate, request.data['user_id'])
+            print(request.data)
             change_settings = serializer.change_settings(candidate, request.data)
             
             if not change_settings:
