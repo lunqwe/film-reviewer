@@ -228,17 +228,16 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Candidate
-        fields = ['profile_picture', 'full_name', 'headline', 'educations', 'experiences', 'website']
+        fields = ['profile_picture', 'full_name', 'headline', 'educations','experiences', 'website']
         extra_kwargs = {
-            'user_id': {'required': True}
+            'user_id': {'required': True},
+            'profile_picture': {'required': False}
         }
 
-    def update(self, instance, validated_data):
-        # Проверяем, если profile_picture передано как URL
-        if 'profile_picture' in validated_data and isinstance(validated_data['profile_picture'], str):
-            # Ничего не меняем, так как это URL
-            validated_data.pop('profile_picture')
-        return super().update(instance, validated_data)
+    def update(self, instance, validated_data: dict):
+        fields_to_update = validated_data.keys()
+        data = change_data(instance, fields_to_update, validated_data)
+        return data
             
         
 class CreateResumeSerializer(serializers.ModelSerializer):
