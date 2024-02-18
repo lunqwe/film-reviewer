@@ -283,7 +283,7 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            candidate_obj = get_obj_by_user_id(Candidate, validated_data['user_id'][0])
+            candidate_obj = get_obj_by_user_id(Candidate, validated_data['user_id'])
             candidate = serializer.update(candidate_obj, validated_data)
             
             if not candidate:
