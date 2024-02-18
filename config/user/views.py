@@ -19,6 +19,7 @@ from .serializers import *
 from .models import CustomUser, Verificator, Candidate, Employer, ResumeFile
 from common.services import *
 from .services import *
+from django.http import QueryDict
 
 
 
@@ -266,13 +267,23 @@ class ChangeEmployerContactView(generics.CreateAPIView):
 class ChangeCandidatePersonalView(generics.CreateAPIView):
     serializer_class = ChangeCandidatePersonalSerializer
     
-    def create(self, request):
+    def validate(self, data):
+        query_dict = QueryDict('', mutable=True)
+        for key, value in data.items():
+            if key == 'profile_picture' and isinstance(value, str):
+                print(key, value)
+                continue
+            query_dict.appendlist(key, value)
+        return query_dict
         
-        serializer = self.get_serializer(data=request.data)
+    
+    def create(self, request):
+        validated_data = self.validate(request.data)
+        serializer = self.get_serializer(data=validated_data)
         try:
-            validated_data = serializer.is_valid(raise_exception=True)
+            serializer.is_valid(raise_exception=True)
             
-            candidate_obj = get_obj_by_user_id(Candidate, validated_data['user_id'])
+            candidate_obj = get_obj_by_user_id(Candidate, validated_data['user_id'][0])
             candidate = serializer.update(candidate_obj, validated_data)
             
             if not candidate:
