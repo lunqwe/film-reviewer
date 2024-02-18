@@ -98,6 +98,7 @@ def get_user(user):
             "links": candidate.links,
             "resume_files": [{'resume_id': resume.id, 'size': resume.file.size, 'title': resume.title, 'file':resume.file.url} for resume in resume_files]
         }
+        print(candidate_data)
         return get_response('success', additional={'user': {"user_data": user_data, "candidate_data": candidate_data}}, status=status.HTTP_200_OK)
 
 def send_verification(user):
