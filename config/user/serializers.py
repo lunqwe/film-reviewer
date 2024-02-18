@@ -332,6 +332,8 @@ class ChangeCandidateNotificationsSerializer(serializers.ModelSerializer):
         }
     def change_settings(self, instance, data):
         fields_to_update = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
+        # instance.shortlist = data.get('shortlist', instance.shortlist)
+        # instance.save()
         return change_data(instance, fields_to_update, data)
         
 #"profile_privacy": {'required': False},
