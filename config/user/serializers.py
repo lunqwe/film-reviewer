@@ -238,7 +238,6 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
         if 'profile_picture' in validated_data and isinstance(validated_data['profile_picture'], str):
             # Ничего не меняем, так как это URL
             validated_data.pop('profile_picture')
-            fields_to_update.remove("profile_picture")
         return super().update(instance, validated_data)
             
         
