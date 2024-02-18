@@ -236,7 +236,7 @@ class ChangeCandidatePersonalSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'profile_picture' in data and isinstance(data['profile_picture'], str):
-            data.pop('profile_picture')
+            del data['profile_picture']
         return data
     
     def update(self, instance, validated_data: dict):
