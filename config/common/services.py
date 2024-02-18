@@ -79,5 +79,6 @@ def change_data(instance, fields_to_update, validated_data):
     for field in fields_to_update:
         if validated_data.get(field):
             setattr(instance, field, validated_data.get(field, getattr(instance, field)))
+            print(instance.field)
     instance.save()
     return instance
