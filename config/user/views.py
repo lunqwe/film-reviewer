@@ -187,8 +187,18 @@ class SaveEmployerView(generics.CreateAPIView):
 class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
     serializer_class = ChangeEmployerCompanyInfoSerializer
     
+    def validate(self, data):
+        query_dict = QueryDict('', mutable=True)
+        for key, value in data.items():
+            if (key == 'logo' or key == 'banner') and isinstance(value, str):
+                print(key, value)
+                continue
+            query_dict.appendlist(key, value)
+        return query_dict
+    
     def create(self, request):
-        serializer = self.get_serializer(data=request.data)
+        validated_data = self.validate(request.data)
+        serializer = self.get_serializer(data=validated_data)
         try:
             serializer.is_valid(raise_exception=True)
             
@@ -289,7 +299,7 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
             if not candidate:
                 return get_response('error', "Error updating candidate.")
             
-            return get_response("success", "Candidate info changed successfully!", status=status.HTTP_202_ACCEPTED)
+            return get_response("success", "Candidate info changed successfully!", {'profile_picture': candidate.profile_picture.url}, status=status.HTTP_202_ACCEPTED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -330,7 +340,7 @@ class ChangeResumeView(generics.CreateAPIView):
             if not resume_changed:
                 return get_response('error', 'Error changing resume', status=status.HTTP_400_BAD_REQUEST)
             
-            return get_response('success', 'Resume file changed successfully!', {'file_url': resume.file.url}, status=status.HTTP_200_OK)
+            return get_response('success', 'Resume file changed successfully!', {'resume_id': resume.id, 'resume_title': resume.title, 'file_url': resume.file.url}, status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
