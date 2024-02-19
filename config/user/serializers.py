@@ -322,23 +322,20 @@ class ChangeCandidateAccountSettingsSerializer(serializers.ModelSerializer):
         fields_to_update = ['map_location', 'phone_number', 'email']
         return change_data(instance, fields_to_update, data)
     
+    
 class ChangeCandidateNotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
         fields = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
         extra_kwargs = {
             'user_id': {'required': True},
-            #add job alerts here
         }
+        
     def change_settings(self, instance, data):
         fields_to_update = ["shortlist", "expire", "five_job_alerts", "profile_saved", "rejection"]
-        # instance.shortlist = data.get('shortlist', instance.shortlist)
-        # instance.save()
         return change_data(instance, fields_to_update, data)
         
-#"profile_privacy": {'required': False},
-            #"resume_privacy": {'required': False},
-            
+        
 class ChangeCandidatePrivacySerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
