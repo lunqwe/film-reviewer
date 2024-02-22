@@ -163,9 +163,44 @@ class ChangePasswordView(generics.CreateAPIView):
         except serializers.ValidationError as e:
             return error_detail(e)
         
+class SaveEmployerImagesView(generics.CreateAPIView):
+    serializer_class = SaveEmployerImagesSerializer
+    
+    def validate(self, data):
+        query_dict = QueryDict('', mutable=True)
+        for key, value in data.items():
+            if key == 'logo' and isinstance(value, str):
+                print(key, value)
+                continue
+            elif key == 'banner' and isinstance(value, str):
+                print(key, value)
+                continue
+            query_dict.appendlist(key, value)
+        return query_dict
+        
+    
+    def create(self, request):
+        validated_data = self.validate(request.data)
+        print(validated_data.keys())
+        serializer = self.get_serializer(data=validated_data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            
+            employer_obj = get_obj_by_user_id(Employer, validated_data['user_id'])
+            employer = serializer.update(employer_obj, validated_data)
+            
+            if not employer:
+                return get_response('error', "Error updating employer.")
+            
+            return get_response("success", "Employer images changed successfully!", {'logo': employer.logo.url, 'banner': employer.banner.url}, status=status.HTTP_202_ACCEPTED)
+        
+        except serializers.ValidationError as e:
+            return error_detail(e)
 
-class SaveEmployerView(generics.CreateAPIView):
-    serializer_class = SaveEmployerSerializer
+
+
+class SaveEmployerDataView(generics.CreateAPIView):
+    serializer_class = SaveEmployerDataSerializer
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -176,7 +211,7 @@ class SaveEmployerView(generics.CreateAPIView):
             employer_created = serializer.update(employer, request.data)
             
             if not employer_created:
-                return get_response('error', "Error creating employer.", status=status.HTTP_401_UNAUTHORIZED)
+                return get_response('error', "Error creating employer.", status=status.HTTP_400_UNAUTHORIZED)
             
             return get_response("success", "Employer created successfully!", status=status.HTTP_202_ACCEPTED)
         

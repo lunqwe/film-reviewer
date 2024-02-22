@@ -44,8 +44,8 @@ class Verificator(models.Model):
     
 class Employer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    logo = models.ImageField(default='defaul_icon.png', upload_to='./logo', blank=True, null=True)
-    banner = models.ImageField(default='defaul_icon.png', upload_to='./banners', blank=True, null=True)
+    logo = models.ImageField(default='default_icon.png', upload_to='employer/logo', blank=True)
+    banner = models.ImageField(default='default_icon.png', upload_to='employer/banners', blank=True)
     company_name = models.CharField(max_length=255, default="")
     about = models.TextField(blank=True, null=True, default='')
     

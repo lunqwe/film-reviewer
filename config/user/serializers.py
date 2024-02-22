@@ -136,32 +136,36 @@ class ChangePasswordSerializer(serializers.Serializer):
             return user
         
         
-        
-        
-class SaveEmployerSerializer(serializers.ModelSerializer):
+class SaveEmployerImagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employer
-        fields = ['logo', 'banner', 'company_name', 'about',
-                  'organization_type', 'industry_types', 'team_size',
+        fields = ['logo', 'banner']
+        extra_kwargs = {
+            "user_id": {'required': True},
+            }
+    
+    def update(self, instance, validated_data):
+        print(validated_data.keys())
+        if "logo" in validated_data.keys():
+            instance.logo.delete()
+        if "banner" in validated_data.keys():
+            instance.banner.delete()
+        return change_data(instance, validated_data.keys(), validated_data)
+    
+    
+class SaveEmployerDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employer
+        fields = ['company_name', 'about', 'organization_type', 'industry_types', 'team_size',
                   'website', 'year_of_establishment', 'company_vision',
-                  'map_location', 'phone_number', 'links']
+                  'map_location', 'phone_number', 'email', 'links']
         
         extra_kwargs = {
             "user_id": {'required': True}
         }
 
     def update(self, instance, validated_data):
-        fields_to_update = [
-            'logo', 'banner', 'company_name', 'about', 'organization_type',
-            'industry_types', 'team_size', 'website', 'year_of_establishment',
-            'company_vision', 'map_location', 'phone_number', 'links'
-        ]
-        changed_instance = change_data(instance, fields_to_update, validated_data)
-        social_links = validated_data.get('links')
-        if social_links:
-            instance.links = social_links
-
-        return changed_instance
+        return change_data(instance, self.fields, validated_data)
     
     
 class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):

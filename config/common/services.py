@@ -75,7 +75,6 @@ def error_detail(e):
     return get_response('error', additional={'detail': error_messages[0]}, status=status.HTTP_400_BAD_REQUEST)
 
 def change_data(instance, fields_to_update, validated_data):
-    print(validated_data)
     for field in fields_to_update:
         value = validated_data.get(field)
         if value:
