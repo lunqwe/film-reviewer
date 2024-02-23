@@ -23,6 +23,10 @@ class Vacancy(models.Model):
     description = models.TextField(default='')
     responsibilities = models.TextField(default='')
     
+    """
+    created at
+    """
+    
     def __str__(self):
         return f'{self.title}({self.author.user.username})'
     

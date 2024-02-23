@@ -17,7 +17,22 @@ class CreateVacancySerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(required=True)
     class Meta:
         model = Vacancy
-        fields = ['user_id', 'title', 'tags', 'min_salery', 'max_salery', 'salery_type', 'education', 'experience', 'job_type', 'vaсancies', 'expiration_date', 'job_level', 'description', 'responsibilities']
+        fields = ['user_id', 'title', 'tags', 'min_salery', 'max_salery',
+                   'salery_type', 'education', 'experience', 'job_type',
+                     'vaсancies', 'expiration_date', 'job_level',
+                       'description', 'responsibilities']
         extra_kwargs = {
             'user_id': {'required': True},
         }
+
+"""
+
+get all jobs (candidate)
+get employer jobs (employer)
+
+vision type (highlight, always top)
+
+aply for job (candidate)
+
+
+"""

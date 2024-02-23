@@ -225,7 +225,10 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
     def validate(self, data):
         query_dict = QueryDict('', mutable=True)
         for key, value in data.items():
-            if (key == 'logo' or key == 'banner') and isinstance(value, str):
+            if key == 'logo' and isinstance(value, str):
+                print(key, value)
+                continue
+            elif key == 'banner' and isinstance(value, str):
                 print(key, value)
                 continue
             query_dict.appendlist(key, value)
@@ -237,13 +240,13 @@ class ChangeEmployerCompanyInfoView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             
-            employer = get_obj_by_user_id(Employer, request.data['user_id'])
-            employer_changed = serializer.update(employer, request.data)
+            employer_obj = get_obj_by_user_id(Employer, validated_data['user_id'])
+            employer = serializer.update(employer_obj, validated_data)
             
-            if not employer_changed:
-                return get_response('error', 'Error changing employer data.')
+            if not employer:
+                return get_response('error', "Error updating employer.")
             
-            return get_response("success", 'Employer company info changed successfully!')
+            return get_response("success", "Employer info changed successfully!", {'logo': employer.logo.url, 'banner': employer.banner.url}, status=status.HTTP_202_ACCEPTED)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -261,9 +264,9 @@ class ChangeEmployerFoundingInfoView(generics.CreateAPIView):
             employer_changed = serializer.change_founding(employer, request.data)
             
             if not employer_changed:
-                return get_response('error', 'Failed to change employer`s founding info.')
+                return get_response('error', 'Failed to change employer`s founding info.', status=status.HTTP_400_UNAUTHORIZED)
             
-            return get_response("success", "Employer founding info changed successfully!")
+            return get_response("success", "Employer founding info changed successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -280,9 +283,9 @@ class EmployerSocialLinksView(generics.CreateAPIView):
             links_created = serializer.change_links(employer, request.data)
             
             if not links_created:
-                return get_response('error', 'Error creating links model')
+                return get_response('error', 'Error creating links model', status=status.HTTP_400_UNAUTHORIZED)
             
-            return get_response('success', "Links added successfully!")
+            return get_response('success', "Links added successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -300,9 +303,9 @@ class ChangeEmployerContactView(generics.CreateAPIView):
             employer_changed = serializer.change(employer, request.data)
             
             if not employer_changed:
-                return get_response('error', 'Error changing employer contacts')
+                return get_response('error', 'Error changing employer contacts', status=status.HTTP_400_UNAUTHORIZED)
             
-            return get_response('success', "Employer contacts changed successfully!")
+            return get_response('success', "Employer contacts changed successfully!", status=status.HTTP_200_OK)
         
         except serializers.ValidationError as e:
             return error_detail(e)
@@ -332,7 +335,7 @@ class ChangeCandidatePersonalView(generics.CreateAPIView):
             candidate = serializer.update(candidate_obj, validated_data)
             
             if not candidate:
-                return get_response('error', "Error updating candidate.")
+                return get_response('error', "Error updating candidate.", status=status.HTTP_400_UNAUTHORIZED)
             
             return get_response("success", "Candidate info changed successfully!", {'profile_picture': candidate.profile_picture.url}, status=status.HTTP_202_ACCEPTED)
         

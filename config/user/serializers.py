@@ -180,10 +180,11 @@ class ChangeEmployerCompanyInfoSerializer(serializers.ModelSerializer):
         
     
     def update(self, instance, validated_data):
-        fields_to_update = ['logo', 'banner', 'company_name', 'about']
-        changed_instance = change_data(instance, fields_to_update, validated_data)
-
-        return changed_instance
+        if "logo" in validated_data.keys():
+            instance.logo.delete()
+        if "banner" in validated_data.keys():
+            instance.banner.delete()
+        return change_data(instance, validated_data.keys(), validated_data)
     
     
 class ChangeEmployerFoundingInfoSerializer(serializers.ModelSerializer):
