@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid text-center" style='background: grey'>    
+  <div class="row content">
+    <div class="col-sm-2 sidenav" style='background: grey'>
+      {% comment %} <p></p>
+      <p></p>
+      <p></p> {% endcomment %}
+    </div>
+    <div class="col-sm-8 text-left" style='background: white'> 
+      <h1>Welcome</h1>
+      <p>Тестовое задание для Bond UA. Ссылка на соурс код: https://github.com/lunqwe/film-reviewer</p>
+      <hr>
+      <h3>Test</h3>
+      <h1>API</h1>
+
+      <h3>/films/db_placeholder/</h3>
+      <p>Функция, которая заполняет базу данных исходя из списка названий, предоставленных пользователем</p>
+      <p>В бади запроса необходимо вставить titles_to_search(list), которые бы содержали названия</p>
+      <p>*Требуется немного времени для обработки стороннего апи и сохранения в базу данных</p>
+      <!-- Форма для получения списка фильмов -->
+      <h3>Пример работы:</h3>
+      <form id="placeholderForm">
+        <label for="actors">Titles (comma separated):</label>
+        <input type="text" id="titles" name="titles"><br>
+        <button type="submit">Run placeholder</button>
+      </form>
+      <h3>Ответ от сервера:</h3>
+      <div id="placeholderResponse"></div>
+      <hr>
+      <h3>/films/get-films/</h3>
+      <p>Функция, которая возвращает данные о фильмах. Можно применить фильтры (year_released, actor, director)</p>
+      <p>Пример ссылки с примененными фильтрами: /films/get-films/?year=2005&actors=Robert+Downey+Jr
+      <!-- Форма для получения списка фильмов -->
+      <h3>Пример работы:</h3>
+      <form id="filterForm">
+        <label for="year">Year:</label>
+        <input type="number" id="year_released" name="year_released"><br>
+
+        <label for="director">Director:</label>
+        <input type="text" id="director" name="director"><br>
+
+        <label for="artist">Artist:</label>
+        <input type="text" id="artist" name="artist"><br>
+
+        <button type="submit">Get Films</button>
+    </form>
+    <h3>Ответ от сервера:</h3>
+    <div id="response"></div>
+
+    <hr>
+
+        <h3>/films/create/</h3>
+        <p>Функция создания объекта фильма. Обязательными значениями являются: title, year_released, director_id, actors_ids(list)</p>
+        <p>Получить айди можно с помощью функции выше (при выводе фильмов выводит имя и айди режисера и актеров)</p>
+        <!-- Форма для получения списка фильмов -->
+        <h3>Пример работы:</h3>
+      <form id="createMovieForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br>
+        <label for="year_released">Year released:</label>
+        <input type="director" id="year" name="year" required><br>
+        <label for="director">Director ID:</label>
+        <input type="number" id="director_id" name="director_id" required><br>
+        <label for="actors">Actors IDs (comma separated):</label>
+        <input type="text" id="actors_ids" name="actors_ids"><br>
+        <button type="submit">Create Movie</button>
+    </form>
+    <h3>Ответ от сервера:</h3>
+    <div id="createResponse"></div>
+    
+    <hr>
+      <h3>/films/update/id</h3>
+      <p>Функция обновления объекта фильма. Обязательными значениями являются: title, year_released, director_id, actors_ids(list)</p>
+      <p>Получить айди можно с помощью функции выше (при выводе фильмов выводит имя и айди режисера и актеров)</p>
+      <!-- Форма для получения списка фильмов -->
+      <h3>Пример работы:</h3>
+      <form id="updateMovieForm">
+        <label for="movie_id">Movie ID:</label>
+        <input type="number" id="movie_id" name="movie_id" required><br>
+        <label for="title">Title:</label>
+        <input type="text" id="updateTitle" name="title" required><br>
+        <label for="year">Year released:</label>
+        <input type="number" id="updateYear" name="year" required><br>
+        <label for="director">Director ID:</label>
+        <input type="number" id="updateDirector_id" name="director_id" required><br>
+        <label for="actors">Actors IDs (comma separated):</label>
+        <input type="text" id="updateActors_ids" name="actors_ids"><br>
+        <button type="submit">Update Movie</button>
+    </form>
+    <h3>Ответ от сервера:</h3>
+    <div id="updateResponse"></div>
+    <hr>
+    <h3>/films/delete/id</h3>
+    <p>Функция обновления объекта фильма. Нужно указать айди в ссылкe.</p>
+    <form id="deleteMovieForm">
+        <label for="delete-movie_id">Movie ID:</label>
+        <input type="number" id="deleteMovie_id" name="delete_movie_id" required><br>
+        <button type="submit">Delete Movie</button>
+    </form>
+    <h3>Ответ от сервера:</h3>
+    <div id="deleteResponse"></div>
+    <hr>
+    <br>
+    <br>
+    <br>
+    <br>
+    </div>
+  </div>
+</div>
+<script>
+  document.getElementById("createMovieForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      // Получаем значения полей формы
+      var title = document.getElementById("title").value;
+      console.log(title)
+      var yearReleased = document.getElementById("year").value;
+      console.log(yearReleased)
+      var director = document.getElementById("director_id").value;
+      var actorsInput = document.getElementById("actors_ids").value;
+
+      // Преобразуем строку с айди актеров в массив
+      var actors = actorsInput.split(",").map(function(actorId) {
+          return parseInt(actorId.trim()); // Удаляем лишние пробелы и преобразуем в число
+      });
+
+      // Формируем объект с данными для отправки на сервер
+      var movieData = {
+          "title": title,
+          "year_released": yearReleased,
+          "director": director,
+          "actors": actors
+      };
+      console.log(movieData)
+      // Отправляем данные на сервер
+      fetch("/films/create/", {  // Замените на полный URL-адрес, если он отличается
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify(movieData)
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json();
+      })
+      .then(data => {
+          console.log('Success:', data);
+          document.getElementById('createResponse').innerText = JSON.stringify(data);
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          // Здесь можно выполнить дополнительные действия в случае ошибки
+      });
+  });
+</script>
+<script>
+  document.getElementById("placeholderForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    // Получаем значения полей формы
+    var titlesInput = document.getElementById("titles").value;
+
+    // Преобразуем строку с заголовками в массив
+    var titles = titlesInput.split(", ");
+
+    // Отправляем запрос на сервер
+    fetch("/films/db_placeholder/",  {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ "titles_to_search": titles })
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log("Database placeholded successfully");
+            return response.json(); // Преобразуем ответ в формате JSON
+        } else {
+            console.error("Failed to placehold database");
+            throw new Error('Failed to placehold database');
+        }
+    })
+    .then(data => {
+        console.log("Response from server:", data);
+        document.getElementById('placeholderResponse').innerText = JSON.stringify(data);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+});
+</script>
+<script>
+  document.getElementById("deleteMovieForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    // Получаем значения полей формы
+    var movieId = document.getElementById("deleteMovie_id").value;
+
+    // Отправляем запрос на удаление фильма на сервер
+    fetch("/films/delete/" + movieId, {
+        method: "DELETE",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log(response)
+            console.log("Movie deleted successfully");
+        } else {
+            console.error("Failed to delete movie");
+        }
+    })
+    .then(data => {
+      console.log("Response from server:", data);
+  })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+});
+</script>
+<script>
+  document.getElementById("updateMovieForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      // Получаем значения полей формы
+      var movieId = document.getElementById("movie_id").value;
+      var title = document.getElementById("updateTitle").value;
+      var director = document.getElementById("updateDirector_id").value;
+      var yearReleased = document.getElementById("updateYear").value;
+      var actorsInput = document.getElementById("updateActors_ids").value;
+
+      var actors = actorsInput.split(",").map(function(actorId) {
+          return parseInt(actorId.trim()); 
+      });
+
+      var movieData = {
+          "title": title,
+          "year_released": yearReleased,
+          "director": director,
+          "actors": actors
+      };
+
+      // Отправляем данные на сервер
+      fetch("/films/update/" + movieId, {
+          method: "PUT",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify(movieData)
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json();
+      })
+      .then(data => {
+          console.log('Success:', data);
+          document.getElementById('updateResponse').innerText = JSON.stringify(data);
+      })
+      .catch(error => {
+          console.error('Error:', error);
+      });
+  });
+</script>
+<script>
+  document.getElementById("filterForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      var year = document.getElementById("year_released").value;
+      var director = document.getElementById("director").value;
+      var artist = document.getElementById("artist").value;
+
+      var url = "{% url 'get-data' %}?";
+
+      if (year) {
+          url += "year_released=" + year + "&";
+      }
+      if (director) {
+          url += "director=" + encodeURIComponent(director) + "&";
+      }
+      if (artist) {
+          url += "actors=" + encodeURIComponent(artist) + "&";
+      }
+
+      url = url.slice(0, -1);
+
+      // Отправляем запрос на сервер
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function () {
+          if (xhr.readyState == 4 && xhr.status == 200) {
+              // Обновляем содержимое текущей страницы с полученными данными
+              document.getElementById("response").innerHTML = xhr.responseText;
+          }
+      };
+      xhr.send();
+  });
+</script>
+
+{% endblock content %}
