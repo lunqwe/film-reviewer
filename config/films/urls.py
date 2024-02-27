@@ -9,11 +9,3 @@ urlpatterns = [
     path('update/<int:pk>', views.UpdateMovieView.as_view(), name='update'),
     path('delete/<int:pk>', views.DeleteMovieView.as_view(), name='delete')
 ]
-"""
-
-ДОДЕЛАТЬ:
-- форму на сайте для примера работы апи
-- документацию, как работает апи 
-- деплойнуть на авс или хероку (скорее всего авс)
-
-"""

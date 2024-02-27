@@ -126,13 +126,6 @@ STATICFILES_DIRS = [
 ]
 
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        # ... другие классы аутентификации, если необходимо
-    ],
-}
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 

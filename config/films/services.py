@@ -1,5 +1,3 @@
-# # from .models import Director, Movie, Actor
-
 import requests
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")

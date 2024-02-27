@@ -61,26 +61,5 @@ class DeleteMovieView(generics.DestroyAPIView):
         print(instance)
         return get_response('success', 'Movie deleted successfully!', status=status.HTTP_200_OK) # кастомная функция возврата респонса
 
-# class DeleteMovieView(generics.CreateAPIView):
-#     serializer_class = ManageDataSerializer
-
-#     def post(self, request):
-#         serializer = self.get_serializer(data=request.data)
-#         try: 
-#             serializer.is_valid(raise_exception=True)
-#             item_to_delete = Movie.objects.get(id=request.data['id']).delete()
-
-#         except serializers.ValidationError as e:
-#             return error_detail(e)
-
-
-""" 
-Так же, можно использовать этот вариант
-
-class DeleteMovieView(generics.DestroyAPIView):
-    queryset = Movie.objects.all()
-    serializer_class = ManageDataSerializer
-    
-"""
 
 
