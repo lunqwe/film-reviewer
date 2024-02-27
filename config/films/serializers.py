@@ -16,12 +16,12 @@ class DatabasePlaceholderSerializer(serializers.Serializer):
 class DirectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Director
-        fields = ["id", 'name']
+        fields = ['name']
 
 class ActorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Actor
-        fields = ["id", 'name']
+        fields = ['name']
 
 class GetDataSerializer(serializers.ModelSerializer):
     director = DirectorSerializer()
@@ -32,12 +32,38 @@ class GetDataSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'year_released', 'director', 'actors']
 
 class ManageDataSerializer(serializers.ModelSerializer):
-    director = serializers.PrimaryKeyRelatedField(queryset=Director.objects.all())
-    actors = serializers.PrimaryKeyRelatedField(many=True, queryset=Actor.objects.all())
+    director = DirectorSerializer()
+    actors = ActorSerializer(many=True)
 
     class Meta:
         model = Movie
         fields = ['id', 'title', 'year_released', 'director', 'actors']
+
+    def create(self, validated_data):
+        director_data = validated_data.pop('director')
+        director, _ = Director.objects.get_or_create(**director_data)
+        print(director)
+        actors_data = validated_data.pop('actors')
+        actors = [Actor.objects.get_or_create(**actor_data)[0] for actor_data in actors_data]
+        print(actors)
+        movie = Movie.objects.create(director=director, **validated_data)
+        movie.actors.set(actors)
+        return movie
+    
+    def update(self, movie, validated_data):
+        director_data = validated_data.pop('director')
+        director, _ = Director.objects.get_or_create(**director_data)
+        print(director)
+        actors_data = validated_data.pop('actors')
+        actors = [Actor.objects.get_or_create(**actor_data)[0] for actor_data in actors_data]
+        print(actors)
+        movie.director = director
+        movie.title = validated_data.get('title')
+        movie.year = validated_data.get('year')
+        movie.actors.set(actors)
+        return movie
+
+
     
 class DeleteDataSerializer(serializers.Serializer):
     obj_id = serializers.IntegerField()

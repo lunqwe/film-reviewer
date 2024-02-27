@@ -34,15 +34,21 @@
       <!-- Форма для получения списка фильмов -->
       <h3>Пример работы:</h3>
       <form id="filterForm">
-        <label for="year">Year:</label>
-        <input type="number" id="year_released" name="year_released"><br>
-
-        <label for="director">Director:</label>
-        <input type="text" id="director" name="director"><br>
-
-        <label for="artist">Artist:</label>
-        <input type="text" id="artist" name="artist"><br>
-
+        <table>
+            <tr>
+                <td><label for="year">Year:</label></td>
+                <td><input type="number" id="year_released" name="year_released"><br></td>
+            </tr>
+            <tr>
+                <td><label for="director">Director:</label></td>
+                <td><input type="text" id="director" name="director"><br></td>
+            </tr>
+            <tr>
+                <td><label for="artist">Actor:</label></td>
+                <td><input type="text" id="artist" name="artist"><br></td>
+            </tr>
+        </table>
+        <br>
         <button type="submit">Get Films</button>
     </form>
     <h3>Ответ от сервера:</h3>
@@ -56,14 +62,25 @@
         <!-- Форма для получения списка фильмов -->
         <h3>Пример работы:</h3>
       <form id="createMovieForm">
-        <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required><br>
-        <label for="year_released">Year released:</label>
-        <input type="director" id="year" name="year" required><br>
-        <label for="director">Director ID:</label>
-        <input type="number" id="director_id" name="director_id" required><br>
-        <label for="actors">Actors IDs (comma separated):</label>
-        <input type="text" id="actors_ids" name="actors_ids"><br>
+        <table>
+            <tr>
+                <td><label for="title">Title:</label></td>
+                <td><input type="text" id="createTitle" name="createTitle" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="year_released">Year released:</label></td>
+                <td><input type="director" id="createYear" name="createYear" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="director">Director:</label></td>
+                <td> <input type="text" id="createDirector" name="createDirector" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="actors">Actors (comma separated): </label></td>
+                <td><input type="text" id="createActors" name="createActors"><br></td>
+            </tr>
+
+        </table>
         <button type="submit">Create Movie</button>
     </form>
     <h3>Ответ от сервера:</h3>
@@ -71,21 +88,33 @@
     
     <hr>
       <h3>/films/update/id</h3>
-      <p>Функция обновления объекта фильма. Обязательными значениями являются: title, year_released, director_id, actors_ids(list)</p>
+      <p>Функция обновления объекта фильма. Обязательными значениями являются: title, year_released, director, actors(list)</p>
       <p>Получить айди можно с помощью функции выше (при выводе фильмов выводит имя и айди режисера и актеров)</p>
       <!-- Форма для получения списка фильмов -->
       <h3>Пример работы:</h3>
       <form id="updateMovieForm">
-        <label for="movie_id">Movie ID:</label>
-        <input type="number" id="movie_id" name="movie_id" required><br>
-        <label for="title">Title:</label>
-        <input type="text" id="updateTitle" name="title" required><br>
-        <label for="year">Year released:</label>
-        <input type="number" id="updateYear" name="year" required><br>
-        <label for="director">Director ID:</label>
-        <input type="number" id="updateDirector_id" name="director_id" required><br>
-        <label for="actors">Actors IDs (comma separated):</label>
-        <input type="text" id="updateActors_ids" name="actors_ids"><br>
+        <table>
+            <tr>
+                <td><label for="movie_id">Movie ID:</label></td>
+                <td><input type="number" id="movie_id" name="movie_id" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="updateTitle">Title:</label></td>
+                <td><input type="text" id="updateTitle" name="title" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="updateYear">Year released:</label></td>
+                <td><input type="number" id="updateYear" name="year" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="updateDirector">Director:</label></td>
+                <td><input type="text" id="updateDirector" name="director" required><br></td>
+            </tr>
+            <tr>
+                <td><label for="updateActors">Actors(comma separated):</label></td>
+                <td><input type="text" id="updateActors" name="actors" required><br></td>
+            </tr>
+        </table>
         <button type="submit">Update Movie</button>
     </form>
     <h3>Ответ от сервера:</h3>
@@ -112,28 +141,29 @@
   document.getElementById("createMovieForm").addEventListener("submit", function(event) {
       event.preventDefault();
 
-      // Получаем значения полей формы
-      var title = document.getElementById("title").value;
+      var title = document.getElementById("createTitle").value;
       console.log(title)
-      var yearReleased = document.getElementById("year").value;
+      var yearReleased = document.getElementById("createYear").value;
       console.log(yearReleased)
-      var director = document.getElementById("director_id").value;
-      var actorsInput = document.getElementById("actors_ids").value;
+      var director = document.getElementById("createDirector").value;
+      console.log(director)
+      var actorsInput = document.getElementById("createActors").value;
+        var actors = actorsInput.split(",");
 
-      // Преобразуем строку с айди актеров в массив
-      var actors = actorsInput.split(",").map(function(actorId) {
-          return parseInt(actorId.trim()); // Удаляем лишние пробелы и преобразуем в число
-      });
+        var formattedActors = [];
+        for (var i = 0; i < actors.length; i++) {
+            var actor_name = actors[i].trim(); // Убедитесь, что убираем лишние пробелы
+            var actorObject = {"name": actor_name};
+            formattedActors.push(actorObject);
+        }
 
-      // Формируем объект с данными для отправки на сервер
       var movieData = {
           "title": title,
           "year_released": yearReleased,
-          "director": director,
-          "actors": actors
+          "director": {'name' : director},
+          "actors": formattedActors
       };
       console.log(movieData)
-      // Отправляем данные на сервер
       fetch("/films/create/", {  // Замените на полный URL-адрес, если он отличается
           method: "POST",
           headers: {
@@ -230,23 +260,26 @@
       event.preventDefault();
 
       // Получаем значения полей формы
-      var movieId = document.getElementById("movie_id").value;
-      var title = document.getElementById("updateTitle").value;
-      var director = document.getElementById("updateDirector_id").value;
-      var yearReleased = document.getElementById("updateYear").value;
-      var actorsInput = document.getElementById("updateActors_ids").value;
+        var movieId = document.getElementById("movie_id").value;
+        var title = document.getElementById("updateTitle").value;
+        var director = document.getElementById("updateDirector").value;
+        var yearReleased = document.getElementById("updateYear").value;
+        var actorsInput = document.getElementById("updateActors").value;
+        var actors = actorsInput.split(",");
 
-      var actors = actorsInput.split(",").map(function(actorId) {
-          return parseInt(actorId.trim()); 
-      });
-
+        var formattedActors = [];
+        for (var i = 0; i < actors.length; i++) {
+            var actor_name = actors[i].trim(); // Убедитесь, что убираем лишние пробелы
+            var actorObject = {"name": actor_name};
+            formattedActors.push(actorObject);
+        }
       var movieData = {
           "title": title,
           "year_released": yearReleased,
-          "director": director,
-          "actors": actors
+          "director": {"name": director},
+          "actors": formattedActors
       };
-
+      console.log(movieData)
       // Отправляем данные на сервер
       fetch("/films/update/" + movieId, {
           method: "PUT",

@@ -46,6 +46,7 @@ class CreateMovieView(generics.CreateAPIView):
     queryset = Movie.objects.all()
     serializer_class = ManageDataSerializer
 
+
 class UpdateMovieView(generics.RetrieveUpdateAPIView):
     queryset = Movie.objects.all()
     serializer_class = ManageDataSerializer
