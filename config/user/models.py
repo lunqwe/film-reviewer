@@ -43,7 +43,7 @@ class Verificator(models.Model):
         return self.user.username
     
 class Employer(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='employer', default='1', related_query_name='user')
     logo = models.ImageField(default='default_icon.png', upload_to='employer/logo', blank=True)
     banner = models.ImageField(default='default_icon.png', upload_to='employer/banners', blank=True)
     company_name = models.CharField(max_length=255, default="")
@@ -68,7 +68,7 @@ class Employer(models.Model):
     
 
 class Candidate(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='candidate', default='1', related_query_name='user')
     profile_picture = models.ImageField(default='default_icon.png', upload_to='candidate/profile_pics', blank=True, null=True)
     full_name = models.CharField(max_length=255, default='')
     headline = models.CharField(max_length=255, default='')

@@ -29,7 +29,10 @@ def get_user(id):
 
 def get_obj_by_user_id(model, user_id):
     user = get_object(CustomUser, id=user_id)
-    return get_object(model, user=user)
+    print(user)
+    return_object = get_object(model, user=user)
+    print(return_object)
+    return return_object
     
     
 def send_email(user_email, subject, email_content):
@@ -59,8 +62,6 @@ def get_response(response_status, detail=(), additional: dict=(),  status=()):
     if additional:
         for key, value in additional.items():
             response_dict[key] = value  
-            
-    
             
     return Response(response_dict, status)
 

@@ -534,17 +534,5 @@ class DeleteUserView(generics.CreateAPIView):
             return error_detail(e)
         
 
-# class TestImageView(generics.CreateAPIView):
-#     serializer_class = TestImageSerializer
-    
-#     def create(self, request):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-        
-#         check_valid = serializer.check(request.data)
-        
-#         if not check_valid:
-#             return get_response('error', 'watafak wrong data', status=status.HTTP_306_RESERVED)
-        
-#         return get_response('vse zaebok', '123', status=status.HTTP_200_OK)
+
         
