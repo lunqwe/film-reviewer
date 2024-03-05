@@ -56,8 +56,15 @@
     <hr>
 
         <h3>/films/create/</h3>
-        <p>Функция создания объекта фильма. Обязательными значениями являются: title, year_released, director_id, actors_ids(list)</p>
-        <p>Получить айди можно с помощью функции выше (при выводе фильмов выводит имя и айди режисера и актеров)</p>
+        <p>Функция создания объекта фильма. Обязательными значениями являются: title, year_released, director, actors(list)</p>
+        <p>Пример body для запроса: </p>
+        <p>{
+            "title": "test",
+            "year_released": "2001",
+            "director": "John Paul",
+            "actors": ['Actor Actor', "Actor2 Actor", "Actor3 Actor"]
+        }
+        </p>
         <!-- Форма для получения списка фильмов -->
         <h3>Пример работы:</h3>
       <form id="createMovieForm">
