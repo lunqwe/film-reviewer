@@ -15,7 +15,7 @@ class Vacancy(models.Model):
     education = models.CharField(max_length=255, default='')
     experience = models.CharField(max_length=255, default='')
     job_type = models.CharField(max_length=255, default='')
-    vaсancies = models.CharField(max_length=255, default='')
+    vacancies = models.CharField(max_length=255, default='')
     expiration_date = models.DateField()
     job_level = models.CharField(max_length=255, default='')
     
@@ -33,7 +33,7 @@ class Vacancy(models.Model):
     """
 
     def __str__(self):
-        return f'{self.title}({self.employer.user_id.username})'
+        return f'{self.title}({self.employer.user.username})'
     
 class Application(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)

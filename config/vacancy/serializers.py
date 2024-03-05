@@ -32,13 +32,9 @@ class CreateVacancySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        user_id = validated_data.pop('employer').get('user').id
+        user_id = validated_data.pop('employer').get('user')
         employer = get_obj_by_user_id(Employer, user_id)
         return Vacancy.objects.create(employer=employer, **validated_data)
-
-
-
-
 
 
 class GetVacanciesSerializer(serializers.ModelSerializer):

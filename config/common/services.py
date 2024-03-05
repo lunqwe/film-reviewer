@@ -29,9 +29,7 @@ def get_user(id):
 
 def get_obj_by_user_id(model, user_id):
     user = get_object(CustomUser, id=user_id)
-    print(user)
     return_object = get_object(model, user=user)
-    print(return_object)
     return return_object
     
     

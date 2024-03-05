@@ -24,6 +24,7 @@ class CreateVacancyView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             if serializer.is_valid(raise_exception=True):
+                serializer.create(request.data)
                 return get_response("success", "Vacancy created successfully!", status=status.HTTP_201_CREATED)
             else:
                 return get_response("error", 'Error while creating vacancy.', status=status.HTTP_400_BAD_REQUEST)
