@@ -15,8 +15,7 @@ class Vacancy(models.Model):
     education = models.CharField(max_length=255, default='')
     experience = models.CharField(max_length=255, default='')
     job_type = models.CharField(max_length=255, default='')
-    vacancies = models.CharField(max_length=255, default='')
-    expiration_date = models.DateField()
+    expiration_date = models.CharField(max_length=255, default='')
     job_level = models.CharField(max_length=255, default='')
     
     #description and responsibility 
