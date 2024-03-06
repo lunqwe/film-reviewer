@@ -16,12 +16,12 @@ from common.services import *
 class EmployerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employer
-        fields = ['user']
+        fields = ['user', 'logo', 'map_location']
 
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = ['id', 'user_id']
+        fields = ['user']
 
 
 class CreateVacancySerializer(serializers.ModelSerializer):
@@ -43,19 +43,30 @@ class GetVacanciesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vacancy
+        fields = ['employer', 'min_salery', 'max_salery', 'status', 'job_type']
+
+class ExactVacancySerializer(serializers.ModelSerializer):
+    candidates = CandidateSerializer(many=True)
+    employer = EmployerSerializer()
+
+    class Meta:
+        model = Vacancy
         fields = "__all__"
 
 
 
+class ApplyToVacancySerializer(serializers.Serializer):
+    user_id = serializers.CharField(required=True)
+    vacancy_id = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        candidate = get_obj_by_user_id(Candidate, user_id=validated_data.get('user_id'))
+        vacancy = get_object(Vacancy, **{'id': validated_data.get('vacancy_id')})
+
+        vacancy.candidates.add(candidate)
+        return Vacancy
+
+
+
+
     
-"""
-
-get all jobs (candidate)
-get employer jobs (employer)
-
-vision type (highlight, always top)
-
-aply for job (candidate)
-
-
-"""

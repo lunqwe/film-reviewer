@@ -37,4 +37,23 @@ class GetVacanciesView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = VacancyFilter
     pagination_class = VacancyPagination
+
+
+class ExactVacancyView(generics.RetrieveAPIView):
+    queryset = Vacancy.objects.all()
+    serializer_class = ExactVacancySerializer
+    lookup_field = 'id'
+
+
+class ApplyToVacancyView(generics.CreateAPIView):
+    serializer_class = ApplyToVacancySerializer
+
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            if serializer.is_valid(raise_exception=True):
+                serializer.create(request.data)
+                return get_response("success", "Candidate applied successfully!", status=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            return error_detail(e)
         

@@ -24,7 +24,7 @@ class Vacancy(models.Model):
     created_at = models.DateTimeField(auto_now=True)
 
     status = models.CharField(max_length=50, default='active')
-    candidates = models.ManyToManyField('user.Candidate', related_name='jobs', blank=True)
+    candidates = models.ManyToManyField('user.Candidate', related_name='applied_jobs', blank=True)
     
     """
     def is_expired(self):
@@ -34,12 +34,4 @@ class Vacancy(models.Model):
     def __str__(self):
         return f'{self.title}({self.employer.user.username})'
     
-class Application(models.Model):
-    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
-    candidate = models.ForeignKey('user.Candidate', on_delete=models.CASCADE)
-    applied_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=50)
-
-    class Meta:
-        unique_together = ('vacancy', 'candidate')
     
